@@ -24,9 +24,7 @@ A **Streamlit** app for tracking and visualizing your **personal Strava activity
 
 ## 🖼️ Demo
 
-![App Screenshot](https://yourdomain.com/screenshot.png)
-
-Try it live: [Streamlit Cloud App 🔗](https://your-app-url.streamlit.app)
+To do
 
 ---
 
