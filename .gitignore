@@ -1,0 +1,12 @@
+# Environnement virtuel
+strava-env/
+venv/
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+
+# Autres fichiers temporaires
+.DS_Store
+
