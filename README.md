@@ -10,8 +10,6 @@
 
 A **Streamlit** app for tracking and visualizing your **personal Strava activity statistics**, providing interactive charts and insights into your performance trends over time.
  
----
-
 ## 📊 Features
 
 - 📅 Weekly, monthly, and yearly activity summaries
@@ -20,13 +18,9 @@ A **Streamlit** app for tracking and visualizing your **personal Strava activity
 - 🔍 Filter activities by type (run, ride, hike, etc.)
 - 💾 Optional data caching for faster performance
 
----
-
 ## 🖼️ Demo
 
 To do
-
----
 
 ## ⚙️ Installation
 
