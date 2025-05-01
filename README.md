@@ -9,7 +9,7 @@
 </p>
 
 A **Streamlit** app for tracking and visualizing your **personal Strava activity statistics**, providing interactive charts and insights into your performance trends over time.
-
+ 
 ---
 
 ## 📊 Features
@@ -36,6 +36,6 @@ Clone the repository and install dependencies:
 git clone https://github.com/yourusername/strava_streamlit_app
 cd strava_streamlit_app
 python -m venv strava-env
-source strava-env/bin/activate  # On Windows: env\Scripts\activate
+source strava-env/bin/activate
 pip install -r requirements.txt
 streamlit run app.py
