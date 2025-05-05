@@ -7,9 +7,9 @@ from strava_api import get_strava_access_token, get_all_activities
 st.set_page_config(page_title="Strava Monitor", layout="wide")
 st.title("Strava Activity Tracker")
 
-# Choose a start date
+# Sidebar filter
 st.sidebar.header("📅 Filter Activities")
-default_start_date = datetime.now() - timedelta(days=7)
+default_start_date = datetime.now() - timedelta(days=30)
 start_date = st.sidebar.date_input("Start Date", default_start_date)
 start_ts = int(datetime.combine(start_date, datetime.min.time()).timestamp())
 
@@ -22,71 +22,75 @@ try:
     else:
         df = pd.DataFrame(activities)
 
-        # Ensure required columns are present
         required_columns = ["name", "distance", "moving_time", "type", "start_date"]
         missing = [col for col in required_columns if col not in df.columns]
         if missing:
             st.error(f"Missing columns: {missing}")
         else:
-            # Format the start_date column
             df["start_date"] = pd.to_datetime(df["start_date"])
-            df["distance_km"] = df["distance"] / 1000  # Convert distance to kilometers
-            df["date_only"] = df["start_date"].dt.date  # Extract the date part only (remove time)
+            df["distance_km"] = df["distance"] / 1000
             df = df.sort_values("start_date")
 
-            # Group by date and sum the distances for each day
-            daily_distances = df.groupby("date_only")["distance_km"].sum().reset_index()
-
-            # Generate all dates in the range (even if there were no activities)
-            all_dates = pd.date_range(start=start_date, end=datetime.now()).date
-            all_dates_df = pd.DataFrame(all_dates, columns=["date_only"])
-
-            # Merge the activity data with all possible dates
-            daily_distances = pd.merge(all_dates_df, daily_distances, on="date_only", how="left")
-            daily_distances["distance_km"].fillna(0, inplace=True)  # Fill NaN with 0 for no activity days
-
-            # KPIs - Total activities, total distance, total time
+            # KPIs
             total_activities = len(df)
-            total_distance = df["distance_km"].sum()  # Total distance in km
-            total_time = df["moving_time"].sum() / 3600  # Total time in hours
+            total_distance = df["distance_km"].sum()
+            total_time = df["moving_time"].sum() / 3600
 
-            # Display KPIs in a row
             kpi_col1, kpi_col2, kpi_col3 = st.columns(3)
-            with kpi_col1:
-                st.metric("Total Activities", total_activities)
-            with kpi_col2:
-                st.metric("Total Distance", f"{total_distance:.2f} km")
-            with kpi_col3:
-                st.metric("Total Time", f"{total_time:.2f} h")
+            kpi_col1.metric("Total Activities", total_activities)
+            kpi_col2.metric("Total Distance", f"{total_distance:.2f} km")
+            kpi_col3.metric("Total Time", f"{total_time:.2f} h")
 
-            # Display raw data with an expander
             with st.expander("📄 View raw data"):
                 st.dataframe(df[required_columns])
 
-            # 🎯 Distance over time chart with Plotly
-            fig = px.line(
-                daily_distances,
-                x="date_only",
-                y="distance_km",
-                title="Daily Distance Trend",
-                labels={"date_only": "Date", "distance_km": "Distance (km)"},
-            )
+            # Graph + toggle side by side
+            chart_col, toggle_col = st.columns([5, 1])
+            with toggle_col:
+                period = st.radio(
+                    "Period", 
+                    options=["Week", "Month"], 
+                    horizontal=True,
+                    label_visibility="collapsed"
+                )
 
-            # Update the x-axis format to show just the date and make it readable
-            fig.update_xaxes(
-                tickformat="%d %b",  # Format the date as day and month (e.g., 01 Jan)
-                title="Date"
-            )
+            with chart_col:
+                if period == "Week":
+                    df["period"] = df["start_date"].dt.tz_localize(None).dt.to_period("W").dt.start_time
+                    all_periods = pd.date_range(start=start_date, end=datetime.now(), freq="W-MON")
+                    period_label = [f"Week of {d.strftime('%b %d')}" for d in all_periods]
+                else:
+                    df["period"] = df["start_date"].dt.tz_localize(None).dt.to_period("M").dt.start_time
+                    all_periods = pd.date_range(start=start_date, end=datetime.now(), freq="MS")
+                    period_label = [d.strftime('%B') for d in all_periods]  # 'April', 'May', etc.
 
-            # Update the layout for better visualization
-            fig.update_layout(
-                xaxis_title="Date",
-                yaxis_title="Distance (km)",
-                template="plotly_dark",  # Optional: to use a dark theme
-            )
+                # Create full range of periods
+                all_periods_df = pd.DataFrame({
+                    "period": pd.to_datetime(all_periods),
+                    "label": period_label
+                })
 
-            # Show the plot
-            st.plotly_chart(fig, use_container_width=True)
+                # Group data
+                grouped_df = df.groupby("period")["distance_km"].sum().reset_index()
+                grouped_df = pd.merge(all_periods_df, grouped_df, on="period", how="left")
+                grouped_df["distance_km"] = grouped_df["distance_km"].fillna(0)
+
+                # Bar chart
+                fig = px.bar(
+                    grouped_df,
+                    x="label",
+                    y="distance_km",
+                    title=f"{period}ly Distance Trend",
+                    labels={"label": period, "distance_km": "Distance (km)"}
+                )
+
+                fig.update_layout(
+                    xaxis_title=period,
+                    yaxis_title="Distance (km)",
+                    template="plotly_dark"
+                )
+
+                st.plotly_chart(fig, use_container_width=True)
 
 except Exception as e:
     st.error(f"❌ Error: {e}")
