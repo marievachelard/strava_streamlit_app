@@ -1,7 +1,7 @@
 import streamlit as st
 import pandas as pd
 import altair as alt
-from datetime import datetime
+from datetime import datetime, timedelta
 from strava_api import get_strava_access_token, get_all_activities
 
 st.set_page_config(page_title="Strava Monitor", layout="wide")
@@ -9,7 +9,8 @@ st.title("🚴‍♀️ Strava Activity Tracker")
 
 # Choisir une date de départ
 st.sidebar.header("📅 Filtrer les activités")
-start_date = st.sidebar.date_input("Date de début", datetime(2024, 1, 1))
+default_start_date = datetime.now() - timedelta(days=7)
+start_date = st.sidebar.date_input("Date de début", default_start_date)
 start_ts = int(datetime.combine(start_date, datetime.min.time()).timestamp())
 
 try:
