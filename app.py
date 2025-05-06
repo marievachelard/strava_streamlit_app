@@ -34,12 +34,16 @@ try:
             # KPIs
             total_activities = len(df)
             total_distance = df["distance_km"].sum()
-            total_time = df["moving_time"].sum() / 3600
+            total_seconds = df["moving_time"].sum()
+            hours = int(total_seconds // 3600)
+            minutes = int((total_seconds % 3600) // 60)
+            total_elevation = df["total_elevation_gain"].sum()
 
-            kpi_col1, kpi_col2, kpi_col3 = st.columns(3)
+            kpi_col1, kpi_col2, kpi_col3, kpi_col4 = st.columns(4)
             kpi_col1.metric("Total Activities", total_activities)
             kpi_col2.metric("Total Distance", f"{total_distance:.2f} km")
-            kpi_col3.metric("Total Time", f"{total_time:.2f} h")
+            kpi_col3.metric("Total Time", f"{hours}h {minutes}min")
+            kpi_col4.metric("Total Elevation", f"{total_elevation:.0f} m")
 
             with st.expander("📄 View raw data"):
                 st.dataframe(df[required_columns])
