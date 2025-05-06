@@ -4,6 +4,27 @@ import plotly.express as px
 from datetime import datetime, timedelta
 from strava_api import get_strava_access_token, get_all_activities
 
+
+def styled_kpi(col, emoji, label, value, color="#FC4C02"):
+    col.markdown(f"""
+        <div style="
+            background-color:#1c1c1e;
+            padding:20px;
+            border-radius:10px;
+            text-align:center;
+            box-shadow: 0 0 6px rgba(0,0,0,0.15);
+            margin-bottom:10px;
+        ">
+            <div style="font-size:18px; color:white; margin-bottom:5px;">
+                {emoji} {label}
+            </div>
+            <div style="color:{color}; font-size:22px; font-weight:bold;">
+                {value}
+            </div>
+        </div>
+    """, unsafe_allow_html=True)
+
+
 st.set_page_config(page_title="Strava Monitor", layout="wide")
 st.title("Strava Activity Tracker")
 
@@ -40,10 +61,12 @@ try:
             total_elevation = df["total_elevation_gain"].sum()
 
             kpi_col1, kpi_col2, kpi_col3, kpi_col4 = st.columns(4)
-            kpi_col1.metric("Total Activities", total_activities)
-            kpi_col2.metric("Total Distance", f"{total_distance:.2f} km")
-            kpi_col3.metric("Total Time", f"{hours}h {minutes}min")
-            kpi_col4.metric("Total Elevation", f"{total_elevation:.0f} m")
+            styled_kpi(kpi_col1, "🏃‍♂️", "Total Activities", total_activities)
+            styled_kpi(kpi_col2, "📏", "Total Distance", f"{total_distance:.2f} km")
+            styled_kpi(kpi_col3, "⏱️", "Total Time", f"{hours}h {minutes}min")
+            styled_kpi(kpi_col4, "🏔️", "Elevation Gain", f"{total_elevation:.0f} m")
+
+            st.markdown("<br>", unsafe_allow_html=True)
 
             with st.expander("📄 View raw data"):
                 st.dataframe(df[required_columns])
