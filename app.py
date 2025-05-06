@@ -79,7 +79,7 @@ try:
     start_date = st.sidebar.date_input("Start Date", default_start_date)
     start_ts = int(datetime.combine(start_date, datetime.min.time()).timestamp())
 
-    activities = get_all_activities(token, after=start_ts)
+    activities = get_strava_activities(token, after=start_ts)
 
     if not activities:
         st.warning("No activities found for this period.")
