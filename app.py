@@ -4,6 +4,8 @@ import plotly.express as px
 from datetime import datetime, timedelta
 from strava_api import get_strava_access_token, get_all_activities
 
+st.set_page_config(page_title="Strava Monitor", layout="wide")
+st.title("Strava Activity Tracker")
 
 def styled_kpi(col, emoji, label, value, color="#FC4C02"):
     col.markdown(f"""
@@ -24,9 +26,11 @@ def styled_kpi(col, emoji, label, value, color="#FC4C02"):
         </div>
     """, unsafe_allow_html=True)
 
+def local_css(file_name):
+    with open(file_name) as f:
+        st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
 
-st.set_page_config(page_title="Strava Monitor", layout="wide")
-st.title("Strava Activity Tracker")
+local_css("assets/style.css")
 
 # Sidebar filter
 st.sidebar.header("📅 Filter Activities")
@@ -108,13 +112,16 @@ try:
                     x="label",
                     y="distance_km",
                     title=f"{period}ly Distance Trend",
-                    labels={"label": period, "distance_km": "Distance (km)"}
+                    labels={"label": period, "distance_km": "Distance (km)"},
+                    color_discrete_sequence=["#FC4C02"]
                 )
 
                 fig.update_layout(
                     xaxis_title=period,
                     yaxis_title="Distance (km)",
-                    template="plotly_dark"
+                    template="plotly_dark",
+                    title_font_color="#FFFFFF",
+                    font_color="white"
                 )
 
                 st.plotly_chart(fig, use_container_width=True)
