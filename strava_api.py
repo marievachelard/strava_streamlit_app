@@ -52,3 +52,8 @@ def get_all_activities(access_token, after=None):
         page += 1
     return all_activities
 
+def get_athlete_profile(token):
+    headers = {"Authorization": f"Bearer {token}"}
+    response = requests.get("https://www.strava.com/api/v3/athlete", headers=headers)
+    response.raise_for_status()
+    return response.json()
