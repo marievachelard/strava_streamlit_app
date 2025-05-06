@@ -7,6 +7,31 @@ from strava_api import get_strava_access_token, get_all_activities
 st.set_page_config(page_title="Strava Monitor", layout="wide")
 st.title("Strava Activity Tracker")
 
+def styled_kpi(col, emoji, label, value, color="#FC4C02"):
+    col.markdown(f"""
+        <div style="
+            background-color:#1c1c1e;
+            padding:20px;
+            border-radius:10px;
+            text-align:center;
+            box-shadow: 0 0 6px rgba(0,0,0,0.15);
+            margin-bottom:10px;
+        ">
+            <div style="font-size:18px; color:white; margin-bottom:5px;">
+                {emoji} {label}
+            </div>
+            <div style="color:{color}; font-size:22px; font-weight:bold;">
+                {value}
+            </div>
+        </div>
+    """, unsafe_allow_html=True)
+
+def local_css(file_name):
+    with open(file_name) as f:
+        st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
+
+local_css("assets/style.css")
+
 # Sidebar filter
 st.sidebar.header("📅 Filter Activities")
 default_start_date = datetime.now() - timedelta(days=30)
@@ -34,27 +59,34 @@ try:
             # KPIs
             total_activities = len(df)
             total_distance = df["distance_km"].sum()
-            total_time = df["moving_time"].sum() / 3600
+            total_seconds = df["moving_time"].sum()
+            hours = int(total_seconds // 3600)
+            minutes = int((total_seconds % 3600) // 60)
+            total_elevation = df["total_elevation_gain"].sum()
 
-            kpi_col1, kpi_col2, kpi_col3 = st.columns(3)
-            kpi_col1.metric("Total Activities", total_activities)
-            kpi_col2.metric("Total Distance", f"{total_distance:.2f} km")
-            kpi_col3.metric("Total Time", f"{total_time:.2f} h")
+            kpi_col1, kpi_col2, kpi_col3, kpi_col4 = st.columns(4)
+            styled_kpi(kpi_col1, "🏃‍♂️", "Total Activities", total_activities)
+            styled_kpi(kpi_col2, "📏", "Total Distance", f"{total_distance:.2f} km")
+            styled_kpi(kpi_col3, "⏱️", "Total Time", f"{hours}h {minutes}min")
+            styled_kpi(kpi_col4, "🏔️", "Elevation Gain", f"{total_elevation:.0f} m")
+
+            st.markdown("<br>", unsafe_allow_html=True)
 
             with st.expander("📄 View raw data"):
                 st.dataframe(df[required_columns])
 
-            # Graph + toggle side by side
-            chart_col, toggle_col = st.columns([5, 1])
-            with toggle_col:
-                period = st.radio(
-                    "Period", 
-                    options=["Week", "Month"], 
-                    horizontal=True,
-                    label_visibility="collapsed"
-                )
+            # Graph + toggle buttons
+            st.markdown("<div style='margin-bottom: -10px'></div>", unsafe_allow_html=True)
+            
+            # Radio buttons for period selection with horizontal layout
+            period = st.radio(
+                "Period", 
+                options=["Week", "Month"], 
+                horizontal=True,
+                label_visibility="collapsed"
+            )
 
-            with chart_col:
+            with st.container():  # Conteneur pour le graphique
                 if period == "Week":
                     df["period"] = df["start_date"].dt.tz_localize(None).dt.to_period("W").dt.start_time
                     all_periods = pd.date_range(start=start_date, end=datetime.now(), freq="W-MON")
@@ -81,13 +113,16 @@ try:
                     x="label",
                     y="distance_km",
                     title=f"{period}ly Distance Trend",
-                    labels={"label": period, "distance_km": "Distance (km)"}
+                    labels={"label": period, "distance_km": "Distance (km)"},
+                    color_discrete_sequence=["#FC4C02"]
                 )
 
                 fig.update_layout(
                     xaxis_title=period,
                     yaxis_title="Distance (km)",
-                    template="plotly_dark"
+                    template="plotly_dark",
+                    title_font_color="#FFFFFF",
+                    font_color="white"
                 )
 
                 st.plotly_chart(fig, use_container_width=True)
