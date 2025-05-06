@@ -24,15 +24,7 @@ def get_strava_access_token():
         raise Exception("❌ Token refresh failed")
     return response.json()["access_token"]
 
-def get_strava_activities(access_token, per_page=10):
-    response = requests.get(
-        "https://www.strava.com/api/v3/athlete/activities",
-        headers={"Authorization": f"Bearer {access_token}"},
-        params={"per_page": per_page}
-    )
-    return response.json()
-
-def get_all_activities(access_token, after=None):
+def get_strava_activities(access_token, after=None):
     all_activities = []
     page = 1
     while True:

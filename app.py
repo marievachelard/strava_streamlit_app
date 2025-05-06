@@ -2,7 +2,7 @@ import streamlit as st
 import pandas as pd
 import plotly.express as px
 from datetime import datetime, timedelta
-from strava_api import get_strava_access_token, get_all_activities, get_athlete_profile
+from strava_api import get_strava_access_token, get_athlete_profile, get_strava_activities
 
 st.set_page_config(page_title="Strava Monitor", layout="wide")
 st.title("Strava Activity Tracker")
