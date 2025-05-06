@@ -75,17 +75,18 @@ try:
             with st.expander("📄 View raw data"):
                 st.dataframe(df[required_columns])
 
-            # Graph + toggle side by side
-            chart_col, toggle_col = st.columns([5, 1])
-            with toggle_col:
-                period = st.radio(
-                    "Period", 
-                    options=["Week", "Month"], 
-                    horizontal=True,
-                    label_visibility="collapsed"
-                )
+            # Graph + toggle buttons
+            st.markdown("<div style='margin-bottom: -10px'></div>", unsafe_allow_html=True)
+            
+            # Radio buttons for period selection with horizontal layout
+            period = st.radio(
+                "Period", 
+                options=["Week", "Month"], 
+                horizontal=True,
+                label_visibility="collapsed"
+            )
 
-            with chart_col:
+            with st.container():  # Conteneur pour le graphique
                 if period == "Week":
                     df["period"] = df["start_date"].dt.tz_localize(None).dt.to_period("W").dt.start_time
                     all_periods = pd.date_range(start=start_date, end=datetime.now(), freq="W-MON")
