@@ -2,11 +2,32 @@ import streamlit as st
 import pandas as pd
 import plotly.express as px
 from datetime import datetime, timedelta
-from strava_api import get_strava_access_token, get_all_activities
+from strava_api import get_strava_access_token, get_athlete_profile, get_strava_activities
 
 st.set_page_config(page_title="Strava Monitor", layout="wide")
 st.title("Strava Activity Tracker")
 
+# Fonction pour afficher le profil dans la sidebar
+def sidebar_profile(photo_url, name, location, description):
+    st.sidebar.markdown(f"""
+        <div style="
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background-color: #1c1c1e;
+            padding: 20px 10px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            box-shadow: 0 0 6px rgba(0,0,0,0.15);
+        ">
+            <img src="{photo_url}" style="width:80px; height:80px; border-radius:50%; margin-bottom:10px; border:2px solid #FC4C02;" />
+            <div style="color: white; font-size: 16px; font-weight: bold;">{name}</div>
+            <div style="color: #aaa; font-size: 13px;">📍 {location}</div>
+            <div style="color: white; font-size: 12px; margin-top: 8px; text-align: center;">{description}</div>
+        </div>
+    """, unsafe_allow_html=True)
+
+# Fonction pour afficher les KPIs globaux 
 def styled_kpi(col, emoji, label, value, color="#FC4C02"):
     col.markdown(f"""
         <div style="
@@ -32,14 +53,32 @@ def local_css(file_name):
 
 local_css("assets/style.css")
 
-# Sidebar filter
-st.sidebar.header("📅 Filter Activities")
-default_start_date = datetime.now() - timedelta(days=30)
-start_date = st.sidebar.date_input("Start Date", default_start_date)
-start_ts = int(datetime.combine(start_date, datetime.min.time()).timestamp())
-
+# Récupère ton token Strava
 try:
     token = get_strava_access_token()
+
+    # Utiliser le token pour récupérer les informations de profil
+    athlete = get_athlete_profile(token)
+
+    # Extraire les informations du profil
+    photo_url = athlete.get("profile", "")
+    name = f"{athlete.get('firstname', '')} {athlete.get('lastname', '')}"
+    location = f"{athlete.get('city', '')}, {athlete.get('country', '')}"
+    description = athlete.get("bio", "Sportif Strava")
+
+    # Afficher le profil dans la sidebar
+    sidebar_profile(
+        photo_url=photo_url,
+        name=name,
+        location=location,
+        description=description
+    )
+
+    # Récupérer les activités comme avant
+    default_start_date = datetime.now() - timedelta(days=30)
+    start_date = st.sidebar.date_input("Start Date", default_start_date)
+    start_ts = int(datetime.combine(start_date, datetime.min.time()).timestamp())
+
     activities = get_all_activities(token, after=start_ts)
 
     if not activities:
