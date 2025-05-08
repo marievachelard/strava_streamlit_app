@@ -3,7 +3,8 @@ import pandas as pd
 import plotly.express as px
 from datetime import datetime, timedelta
 from strava_api import get_strava_access_token, get_athlete_profile, get_strava_activities
-from components import display_profile_card, display_kpi_card
+from components.profile_card import display_profile_card
+from components.kpi_card import display_kpi_card
 
 st.set_page_config(page_title="Strava Monitor", layout="wide")
 st.title("Strava Activity Tracker")
