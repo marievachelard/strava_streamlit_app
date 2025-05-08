@@ -10,17 +10,8 @@ st.title("Strava Activity Tracker")
 # Fonction pour afficher le profil dans la sidebar
 def sidebar_profile(photo_url, name, location, description):
     st.sidebar.markdown(f"""
-        <div style="
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            background-color: #1c1c1e;
-            padding: 20px 10px;
-            border-radius: 10px;
-            margin-bottom: 20px;
-            box-shadow: 0 0 6px rgba(0,0,0,0.15);
-        ">
-            <img src="{photo_url}" style="width:80px; height:80px; border-radius:50%; margin-bottom:10px; border:2px solid #FC4C02;" />
+        <div class="profilCard">
+            <img src="{photo_url}" class="profilImage" />
             <div style="color: white; font-size: 16px; font-weight: bold;">{name}</div>
             <div style="color: #aaa; font-size: 13px;">📍 {location}</div>
             <div style="color: white; font-size: 12px; margin-top: 8px; text-align: center;">{description}</div>

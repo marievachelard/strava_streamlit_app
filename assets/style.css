@@ -1,3 +1,28 @@
+* {
+   --orange-primary: #FC4C02;
+}
+
+/* Profil Card */
+.profilCard {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    background-color: #1c1c1e;
+    padding: 20px 10px;
+    border-radius: 10px;
+    margin-bottom: 20px;
+    box-shadow: 0 0 6px rgba(0,0,0,0.15);
+}
+
+.profilImage {
+    width:80px; 
+    height:80px; 
+    border-radius:50%; 
+    margin-bottom:10px;
+    border:2px solid var(--orange-primary);
+}
+
+
 /* Conteneur du radiogroup */
 div[role="radiogroup"] {
     display: flex;
@@ -21,14 +46,14 @@ div[role="radiogroup"] > label {
 
 /* Effet au survol */
 div[role="radiogroup"] > label:hover {
-    background-color: #FC4C02;
+    background-color: var(--orange-primary);
     color: white;
     transform: scale(1.05);       /* Léger agrandissement au hover */
 }
 
 /* Bouton sélectionné */
 div[role="radiogroup"] > label[data-selected="true"] {
-    background-color: #FC4C02;
+    background-color: var(--orange-primary);
     color: white;
-    box-shadow: 0 0 5px #FC4C02;
+    box-shadow: 0 0 5px var(--orange-primary);
 }
