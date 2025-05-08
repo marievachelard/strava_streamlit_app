@@ -2,7 +2,11 @@ import streamlit as st
 import pandas as pd
 import plotly.express as px
 from datetime import datetime, timedelta
-from strava_api import get_strava_access_token, get_athlete_profile, get_strava_activities
+
+from api.authentication import get_strava_access_token
+from api.athlete import get_athlete_profile
+from api.activities import get_strava_activities
+
 from components.profile_card import display_profile_card
 from components.kpi_card import display_kpi_card
 
