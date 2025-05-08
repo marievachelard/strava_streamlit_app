@@ -1,0 +1,95 @@
+* {
+   --orange-primary: #FC4C02;
+}
+
+/* Profile Card */
+.profileCard {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    background-color: #1c1c1e;
+    padding: 20px 10px;
+    border-radius: 10px;
+    margin-bottom: 20px;
+    box-shadow: 0 0 6px rgba(0,0,0,0.15);
+}
+
+.profileImage {
+    width:80px; 
+    height:80px; 
+    border-radius:50%; 
+    margin-bottom:10px;
+    border:2px solid var(--orange-primary);
+}
+
+.profileName {
+    color: white;
+    font-size: 16px;
+    font-weight: bold;
+}
+
+.profileLocation {
+    color: #aaa;
+    font-size: 13px;
+}
+
+.profileDescription {
+    color: white;
+    font-size: 12px;
+    margin-top: 8px;
+    text-align: center;
+}
+
+/* KPI Card */
+.kpiCard {
+    background-color:#1c1c1e;
+    padding:20px;
+    border-radius:10px;
+    text-align:center;
+    box-shadow: 0 0 6px rgba(0,0,0,0.15);
+    margin-bottom:10px;
+}
+
+.kpiLabel {
+    font-size:18px;
+    color:white;
+    margin-bottom:5px;
+}
+
+.kpiValue {
+    color: var(--orange-primary);
+    font-size:22px;
+    font-weight:bold;
+}
+
+/* Radio Button */
+div[role="radiogroup"] {
+    display: flex;
+    justify-content: flex-start;
+    gap: 10px;
+    margin-bottom: 0.3rem;
+}
+
+div[role="radiogroup"] > label {
+    background-color: #1c1c1e;
+    color: white;
+    padding: 4px 12px;
+    border-radius: 20px;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 600;
+    border: none;
+    transition: background-color 0.2s ease-in-out, transform 0.2s ease-in-out;
+}
+
+div[role="radiogroup"] > label:hover {
+    background-color: var(--orange-primary);
+    color: white;
+    transform: scale(1.05);
+}
+
+div[role="radiogroup"] > label[data-selected="true"] {
+    background-color: var(--orange-primary);
+    color: white;
+    box-shadow: 0 0 5px var(--orange-primary);
+}
