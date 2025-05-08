@@ -62,7 +62,7 @@
     font-weight:bold;
 }
 
-/* Conteneur du radiogroup */
+/* Radio Button */
 div[role="radiogroup"] {
     display: flex;
     justify-content: flex-start;
@@ -70,7 +70,6 @@ div[role="radiogroup"] {
     margin-bottom: 0.3rem;
 }
 
-/* Style des boutons */
 div[role="radiogroup"] > label {
     background-color: #1c1c1e;
     color: white;
@@ -83,14 +82,12 @@ div[role="radiogroup"] > label {
     transition: background-color 0.2s ease-in-out, transform 0.2s ease-in-out;
 }
 
-/* Effet au survol */
 div[role="radiogroup"] > label:hover {
     background-color: var(--orange-primary);
     color: white;
     transform: scale(1.05);
 }
 
-/* Bouton sélectionné */
 div[role="radiogroup"] > label[data-selected="true"] {
     background-color: var(--orange-primary);
     color: white;
