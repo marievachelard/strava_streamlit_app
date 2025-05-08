@@ -10,6 +10,8 @@ from api.activities import get_strava_activities
 from components.profile_card import display_profile_card
 from components.kpi_card import display_kpi_card
 
+from config import ORANGE_PRIMARY_COLOR
+
 st.set_page_config(page_title="Strava Monitor", layout="wide")
 st.title("Strava Activity Tracker")
 
@@ -118,7 +120,7 @@ try:
                     y="distance_km",
                     title=f"{period}ly Distance Trend",
                     labels={"label": period, "distance_km": "Distance (km)"},
-                    color_discrete_sequence=["#FC4C02"]
+                    color_discrete_sequence=[ORANGE_PRIMARY_COLOR]
                 )
 
                 fig.update_layout(
