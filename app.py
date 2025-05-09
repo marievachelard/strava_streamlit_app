@@ -111,6 +111,9 @@ try:
                 grouped_df = pd.merge(all_periods_df, grouped_df, on="period", how="left")
                 grouped_df["distance_km"] = grouped_df["distance_km"].fillna(0)
 
+                # Calculating the average distance
+                average_distance = grouped_df["distance_km"].mean()
+
                 # Plotting the line chart with markers
                 fig = px.line(
                     grouped_df,
@@ -123,6 +126,17 @@ try:
                 )
 
                 fig.update_traces(marker=dict(size=8, symbol="circle"))  # Customize marker size and shape
+
+                # Adding a horizontal line for the average
+                fig.add_hline(
+                    y=average_distance,
+                    line=dict(color="gray", dash="dash", width=1),
+                    annotation_text=f"Average: {average_distance:.0f} km",
+                    annotation_position="bottom right",
+                    annotation_font_size=12,
+                    annotation_font_color="white"
+                )
+
                 fig.update_layout(
                     xaxis_title=period,
                     yaxis_title="Distance (km)",
