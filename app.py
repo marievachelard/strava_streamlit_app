@@ -8,7 +8,7 @@ from api.athlete import get_athlete_profile
 from api.activities import get_strava_activities
 
 from components.profile_card import display_profile_card
-from components.kpi_card import display_kpi_card
+from components.kpi_card import display_kpi_card, display_kpi_card_test
 
 from config import ORANGE_PRIMARY_COLOR
 
@@ -73,6 +73,26 @@ try:
 
             total_distance = df["distance_km"].sum()
 
+            # test -----------
+            period_days = (datetime.now().date() - start_date).days
+            start_date_last_year = start_date - timedelta(days=365)
+            end_date_last_year = start_date_last_year + timedelta(days=period_days)
+
+            start_ts_last_year = int(datetime.combine(start_date_last_year, datetime.min.time()).timestamp())
+            end_ts_last_year = int(datetime.combine(end_date_last_year, datetime.max.time()).timestamp())
+
+            activities_last_year = get_strava_activities(token, after=start_ts_last_year)
+            activities_last_year = [act for act in activities_last_year if pd.to_datetime(act["start_date"]).timestamp() <= end_ts_last_year]
+
+            df_last_year = pd.DataFrame(activities_last_year)
+            df_last_year["distance_km"] = df_last_year["distance"] / 1000
+
+            total_distance_last_year = df_last_year["distance_km"].sum()
+
+            diff_distance = total_distance - total_distance_last_year
+            percent_diff_distance = (diff_distance / total_distance_last_year) * 100 if total_distance_last_year > 0 else 0
+            # end test -----------
+
             total_seconds = df["moving_time"].sum()
             hours = int(total_seconds // 3600)
             minutes = int((total_seconds % 3600) // 60)
@@ -81,7 +101,8 @@ try:
 
             kpi_col1, kpi_col2, kpi_col3, kpi_col4 = st.columns(4)
             display_kpi_card(kpi_col1, "🏃‍♂️", "Total Activities", total_activities)
-            display_kpi_card(kpi_col2, "📏", "Total Distance", f"{total_distance:.2f} km")
+            diff_str = f"{diff_distance:+.1f} km ({percent_diff_distance:+.1f}%)"
+            display_kpi_card_test(kpi_col2, "📏", "Total Distance", f"{total_distance:.2f} km", subtitle=diff_str)
             display_kpi_card(kpi_col3, "⏱️", "Total Time", f"{hours}h {minutes}min")
             display_kpi_card(kpi_col4, "🏔️", "Elevation Gain", f"{total_elevation:.0f} m")
 
