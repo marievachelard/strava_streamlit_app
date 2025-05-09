@@ -18,6 +18,14 @@ A **Streamlit** app for tracking and visualizing your **personal Strava activity
 - 🔍 Filter activities by type (run, ride, hike, etc.)
 - 💾 Optional data caching for faster performance
 
+## 🎨 Color Palette
+
+The colors used in this application are defined as follows in the CSS code:
+Main dark color: #1c1c1e
+Very dark background: #101011
+Vibrant orange accent: #FC4C02
+Main white color: #ffffff
+
 ## 🖼️ Demo
 
 To do

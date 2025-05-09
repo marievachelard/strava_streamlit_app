@@ -85,13 +85,14 @@ try:
             # Data view
             with st.expander("📄 View raw data"):
                 st.dataframe(df[required_columns])
-            
-            # Radio buttons
-            period = st.radio(
-                "Period", 
-                options=["Week", "Month"], 
-                horizontal=True,
-                label_visibility="collapsed"
+
+            # Segmented control
+            period = st.segmented_control(
+                "Period",
+                options = ["Week", "Month"],
+                selection_mode="single",
+                default = "Week",
+                label_visibility="hidden"
             )
 
             # Bar chart
