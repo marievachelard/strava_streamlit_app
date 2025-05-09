@@ -21,10 +21,12 @@ A **Streamlit** app for tracking and visualizing your **personal Strava activity
 ## 🎨 Color Palette
 
 The colors used in this application are defined as follows in the CSS code:
-Main dark color: #1c1c1e
-Very dark background: #101011
-Vibrant orange accent: #FC4C02
-Main white color: #ffffff
+
+- **Main dark color**: `#1c1c1e`  ![#1c1c1e](https://via.placeholder.com/15/1c1c1e/1c1c1e?text=+)
+- **Very dark background**: `#101011`  ![#101011](https://via.placeholder.com/15/101011/101011?text=+)
+- **Vibrant orange accent**: `#FC4C02`  ![#FC4C02](https://via.placeholder.com/15/FC4C02/FC4C02?text=+)
+- **Main white color**: `#ffffff`  ![#ffffff](https://via.placeholder.com/15/ffffff/ffffff?text=+)
+
 
 ## 🖼️ Demo
 
