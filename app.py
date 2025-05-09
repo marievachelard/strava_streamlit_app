@@ -70,10 +70,13 @@ try:
 
             # KPI card
             total_activities = len(df)
+
             total_distance = df["distance_km"].sum()
+
             total_seconds = df["moving_time"].sum()
             hours = int(total_seconds // 3600)
             minutes = int((total_seconds % 3600) // 60)
+
             total_elevation = df["total_elevation_gain"].sum()
 
             kpi_col1, kpi_col2, kpi_col3, kpi_col4 = st.columns(4)
@@ -81,6 +84,24 @@ try:
             display_kpi_card(kpi_col2, "📏", "Total Distance", f"{total_distance:.2f} km")
             display_kpi_card(kpi_col3, "⏱️", "Total Time", f"{hours}h {minutes}min")
             display_kpi_card(kpi_col4, "🏔️", "Elevation Gain", f"{total_elevation:.0f} m")
+
+            longest_distance = df["distance_km"].max()
+            
+            avg_duration_sec = df["moving_time"].mean()
+            avg_duration_min = avg_duration_sec / 60
+            avg_hours = int(avg_duration_min // 60)
+            avg_minutes = int(avg_duration_min % 60)
+            
+            df["avg_speed_kmh"] = df["distance_km"] / (df["moving_time"] / 3600)
+            avg_speed = df["avg_speed_kmh"].mean()
+
+            avg_elevation = df["total_elevation_gain"].mean()
+            
+            kpi_col5, kpi_col6, kpi_col7, kpi_col8 = st.columns(4)
+            display_kpi_card(kpi_col5, "🏁", "Longest Activity", f"{longest_distance:.0f} km")
+            display_kpi_card(kpi_col6, "⏳", "Average Duration", f"{avg_hours}h {avg_minutes}min")
+            display_kpi_card(kpi_col7, "🐇", "Average Speed", f"{avg_speed:.2f} km/h")
+            display_kpi_card(kpi_col8, "🏔️", "Average Elevation Gain", f"{avg_elevation:.0f} m")
 
             # Segmented control
             period = st.segmented_control(
