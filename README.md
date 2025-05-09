@@ -22,7 +22,7 @@ A **Streamlit** app for tracking and visualizing your **personal Strava activity
 
 The colors used in this application are defined as follows in the CSS code:
 
-- **Main dark color**: `#1c1c1e`  ![#1c1c1e](https://www.colorhexa.com/1c1c1e.png)
+- **Main dark color**: `#1c1c1e`  ![#1c1c1e](https://www.colorhexa.com/1c1c1e.png =20x20)
 - **Very dark background**: `#101011`  ![#101011](https://www.colorhexa.com/101011.png)
 - **Vibrant orange accent**: `#FC4C02`  ![#FC4C02](https://www.colorhexa.com/fc4c02.png)
 - **Main white color**: `#ffffff`  ![#ffffff](https://www.colorhexa.com/ffffff.png)
