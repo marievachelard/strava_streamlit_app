@@ -82,10 +82,6 @@ try:
             display_kpi_card(kpi_col3, "⏱️", "Total Time", f"{hours}h {minutes}min")
             display_kpi_card(kpi_col4, "🏔️", "Elevation Gain", f"{total_elevation:.0f} m")
 
-            # Data view
-            with st.expander("📄 View raw data"):
-                st.dataframe(df[required_columns])
-
             # Segmented control
             period = st.segmented_control(
                 "Period",
@@ -95,7 +91,7 @@ try:
                 label_visibility="hidden"
             )
 
-            # Bar chart
+            # Line chart with markers
             with st.container():
                 if period == "Week":
                     df["period"] = df["start_date"].dt.tz_localize(None).dt.to_period("W").dt.start_time
@@ -115,21 +111,25 @@ try:
                 grouped_df = pd.merge(all_periods_df, grouped_df, on="period", how="left")
                 grouped_df["distance_km"] = grouped_df["distance_km"].fillna(0)
 
-                fig = px.bar(
+                # Plotting the line chart with markers
+                fig = px.line(
                     grouped_df,
                     x="label",
                     y="distance_km",
                     title=f"{period}ly Distance Trend",
                     labels={"label": period, "distance_km": "Distance (km)"},
+                    markers=True,  # Adding markers
                     color_discrete_sequence=[ORANGE_PRIMARY_COLOR]
                 )
 
+                fig.update_traces(marker=dict(size=8, symbol="circle"))  # Customize marker size and shape
                 fig.update_layout(
                     xaxis_title=period,
                     yaxis_title="Distance (km)",
                     template="plotly_dark",
                     title_font_color="#FFFFFF",
-                    font_color="white"
+                    font_color="white",
+                    showlegend=False  # Hides legend as we only have one line
                 )
 
                 st.plotly_chart(fig, use_container_width=True)
