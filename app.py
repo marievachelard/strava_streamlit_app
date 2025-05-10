@@ -8,15 +8,17 @@ from api.athlete import get_athlete_profile
 from api.activities import get_strava_activities
 
 from components.profile_card import display_profile_card
-from components.kpi_card import display_kpi_card, display_kpi_card_test
 
-from config import ORANGE_PRIMARY_COLOR
+from config import ORANGE_PRIMARY_COLOR, kpi_config
+
 from services.data_processing import (
     preprocess_activities,
     compute_kpis,
-    compute_last_year_comparison,
-    get_last_year_range
+    get_last_year_range,
+    compute_all_comparisons
 )
+
+from utils import display_kpi_with_comparison
 
 st.set_page_config(page_title="Strava Monitor", layout="wide")
 st.title("Strava Activity Tracker")
@@ -34,6 +36,7 @@ try:
     # --  SIDEBAR  -- #
     # --------------- #
 
+    # Load athlete data
     athlete = get_athlete_profile(token)
 
     # Profile card
@@ -49,16 +52,21 @@ try:
         description=description
     )
 
-    # Date filter
-    default_start_date = datetime.now() - timedelta(days=30)
-    start_date = st.sidebar.date_input("Start Date", default_start_date)
-    start_ts = int(datetime.combine(start_date, datetime.min.time()).timestamp())
-
     # --------------- #
     # -- MAIN AREA -- #
     # --------------- #
 
-    activities = get_strava_activities(token, after=start_ts)
+    # Date filter
+    default_start_date = datetime.now() - timedelta(days=30)
+    
+    cols = st.columns(4)
+    with cols[0]:
+        start_date = st.date_input("Start Date", default_start_date)
+    
+    start_ts = int(datetime.combine(start_date, datetime.min.time()).timestamp())
+
+    # Load activities data
+    activities = get_strava_activities(token, after=start_ts, activity_types=['Run'])
 
     if not activities:
         st.warning("No activities found for this period.")
@@ -70,40 +78,33 @@ try:
         start_ts_last_year = int(datetime.combine(start_last_year, datetime.min.time()).timestamp())
         end_ts_last_year = int(datetime.combine(end_last_year, datetime.max.time()).timestamp())
 
-        activities_last_year = get_strava_activities(token, after=start_ts_last_year)
+        activities_last_year = get_strava_activities(token, after=start_ts_last_year, activity_types=['Run'])
         activities_last_year = [act for act in activities_last_year if pd.to_datetime(act["start_date"]).timestamp() <= end_ts_last_year]
+        
         df_last_year = preprocess_activities(activities_last_year)
+        kpis_last_year = compute_kpis(df_last_year)
 
-        comparison = compute_last_year_comparison(df, df_last_year)
+        comparisons = compute_all_comparisons(kpis, kpis_last_year)
 
-        # KPI card display
-        total_activities = kpis["total_activities"]
-        total_distance = kpis["total_distance"]
-        total_seconds = kpis["total_seconds"]
-        hours = int(total_seconds // 3600)
-        minutes = int((total_seconds % 3600) // 60)
-        total_elevation = kpis["total_elevation"]
+        # KPI card
+        cols = st.columns(4)
+        for idx, config in enumerate(kpi_config):
+            key = config["key"]
+            col = cols[idx % 4]
+            icon = config["icon"]
+            label = config["label"]
+            unit = config.get("unit", "")
+            is_duration = config.get("is_duration", False)
 
-        kpi_col1, kpi_col2, kpi_col3, kpi_col4 = st.columns(4)
-        display_kpi_card(kpi_col1, "🏃‍♂️", "Total Activities", total_activities)
-        diff_str = f"{comparison['diff_distance']:+.1f} km ({comparison['percent_diff_distance']:+.1f}%)"
-        display_kpi_card_test(kpi_col2, "📏", "Total Distance", f"{total_distance:.2f} km", subtitle=diff_str)
-        display_kpi_card(kpi_col3, "⏱️", "Total Time", f"{hours}h {minutes}min")
-        display_kpi_card(kpi_col4, "🏔️", "Elevation Gain", f"{total_elevation:.0f} m")
-
-        longest_distance = kpis["longest_distance"]
-        avg_duration_sec = kpis["avg_duration_sec"]
-        avg_duration_min = avg_duration_sec / 60
-        avg_hours = int(avg_duration_min // 60)
-        avg_minutes = int(avg_duration_min % 60)
-        avg_speed = kpis["avg_speed"]
-        avg_elevation = kpis["avg_elevation"]
-
-        kpi_col5, kpi_col6, kpi_col7, kpi_col8 = st.columns(4)
-        display_kpi_card(kpi_col5, "🏁", "Longest Activity", f"{longest_distance:.0f} km")
-        display_kpi_card(kpi_col6, "⏳", "Average Duration", f"{avg_hours}h {avg_minutes}min")
-        display_kpi_card(kpi_col7, "🐇", "Average Speed", f"{avg_speed:.2f} km/h")
-        display_kpi_card(kpi_col8, "🏔️", "Average Elevation Gain", f"{avg_elevation:.0f} m")
+            display_kpi_with_comparison(
+                col,
+                icon,
+                label,
+                kpis[key],
+                comparisons[key],
+                unit=unit,
+                is_duration=is_duration
+            )
 
         # Segmented control
         period = st.segmented_control(
@@ -148,7 +149,7 @@ try:
                 color_discrete_sequence=[ORANGE_PRIMARY_COLOR]
             )
 
-            fig.update_traces(marker=dict(size=8, symbol="circle"))  # Customize marker size and shape
+            fig.update_traces(marker=dict(size=8, symbol="circle"))
 
             # Adding a horizontal line for the average
             fig.add_hline(
@@ -166,7 +167,7 @@ try:
                 template="plotly_dark",
                 title_font_color="#FFFFFF",
                 font_color="white",
-                showlegend=False  # Hides legend as we only have one line
+                showlegend=False
             )
 
             st.plotly_chart(fig, use_container_width=True)

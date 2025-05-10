@@ -1,4 +1,3 @@
-# services/data_processing.py
 import pandas as pd
 from datetime import datetime, timedelta
 
@@ -50,28 +49,6 @@ def compute_kpis(df):
         "avg_elevation": avg_elevation
     }
 
-def compute_last_year_comparison(df_current, df_last_year):
-    """
-    Compare the current year's data with the previous year's data.
-
-    Args:
-        df_current (pd.DataFrame): The current year's activity data.
-        df_last_year (pd.DataFrame): The previous year's activity data.
-
-    Returns:
-        dict: A dictionary with the difference in total distance and the percentage change compared to the last year.
-    """
-    total_distance = df_current["distance_km"].sum()
-    total_distance_last_year = df_last_year["distance_km"].sum()
-    diff = total_distance - total_distance_last_year
-    percent = (diff / total_distance_last_year) * 100 if total_distance_last_year > 0 else 0
-    
-    return {
-        "diff_distance": diff,
-        "percent_diff_distance": percent,
-        "total_distance_last_year": total_distance_last_year
-    }
-
 def get_last_year_range(start_date):
     """
     Get the date range corresponding to the previous year for the selected period.
@@ -86,3 +63,30 @@ def get_last_year_range(start_date):
     start_last_year = start_date - timedelta(days=365)
     end_last_year = start_last_year + timedelta(days=period_days)
     return start_last_year, end_last_year
+
+def compute_all_comparisons(kpis_current, kpis_last_year):
+    """
+    Compare all KPIs between current and last year.
+
+    Args:
+        kpis_current (dict): KPIs for the current year.
+        kpis_last_year (dict): KPIs for the previous year.
+
+    Returns:
+        dict: A dictionary where each KPI has a sub-dictionary with 'diff' and 'percent_diff'.
+    """
+    comparisons = {}
+
+    for key in kpis_current:
+        if key in kpis_last_year:
+            current_value = kpis_current[key]
+            last_value = kpis_last_year[key]
+            diff = current_value - last_value
+            percent_diff = (diff / last_value * 100) if last_value else 0.0
+            comparisons[key] = {
+                "diff": diff,
+                "percent_diff": percent_diff,
+                "total_last_year": last_value
+            }
+
+    return comparisons
