@@ -24,6 +24,12 @@ st.set_page_config(page_title="Strava Monitor", layout="wide")
 st.title("Strava Activity Tracker")
 
 def local_css(file_name):
+    """
+    Injects local CSS styles into a Streamlit app.
+
+    Parameters:
+    file_name (str): The path to the local CSS file to be included.
+    """
     with open(file_name) as f:
         st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
 
@@ -63,27 +69,33 @@ try:
     with cols[0]:
         start_date = st.date_input("Start Date", default_start_date)
     
+    # Define the *current* start of the filtered date
     start_ts = int(datetime.combine(start_date, datetime.min.time()).timestamp())
 
-    # Load activities data
+    # Load *current* activities data
     activities = get_strava_activities(token, after=start_ts, activity_types=['Run'])
 
     if not activities:
         st.warning("No activities found for this period.")
     else:
+        # *Current* data
         df = preprocess_activities(activities)
         kpis = compute_kpis(df)
 
+        # Define the *past* start of the filtered date
         start_last_year, end_last_year = get_last_year_range(start_date)
         start_ts_last_year = int(datetime.combine(start_last_year, datetime.min.time()).timestamp())
         end_ts_last_year = int(datetime.combine(end_last_year, datetime.max.time()).timestamp())
 
+        # Load *past* activities data
         activities_last_year = get_strava_activities(token, after=start_ts_last_year, activity_types=['Run'])
         activities_last_year = [act for act in activities_last_year if pd.to_datetime(act["start_date"]).timestamp() <= end_ts_last_year]
         
+        # *Past* data
         df_last_year = preprocess_activities(activities_last_year)
         kpis_last_year = compute_kpis(df_last_year)
 
+        # Compute comparisons *current* versus *past* data
         comparisons = compute_all_comparisons(kpis, kpis_last_year)
 
         # KPI card
@@ -124,7 +136,7 @@ try:
             else:
                 df["period"] = df["start_date"].dt.tz_localize(None).dt.to_period("M").dt.start_time
                 all_periods = pd.date_range(start=start_date, end=datetime.now(), freq="MS")
-                period_label = [d.strftime('%B') for d in all_periods]  # 'April', 'May', etc.
+                period_label = [d.strftime('%B') for d in all_periods]
 
             all_periods_df = pd.DataFrame({
                 "period": pd.to_datetime(all_periods),
