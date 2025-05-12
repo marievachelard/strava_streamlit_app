@@ -8,29 +8,23 @@ from api.athlete import get_athlete_profile
 from api.activities import get_strava_activities
 
 from components.profile_card import display_profile_card
+from components.distance_chart import display_distance_trend_chart
 
-from config import ORANGE_PRIMARY_COLOR, kpi_config
+from config import kpi_config
 
 from services.data_processing import (
-    get_df_and_kpis,
-    get_last_year_range,
-    compute_all_comparisons
+    load_current_year_data,
+    load_last_year_data,
+    compute_all_comparisons,
+    process_period,
+    add_average_line
 )
 
-from utils import display_kpi_with_comparison
+from utils.style import local_css
+from utils.kpi_display import display_kpi_with_comparison
 
 st.set_page_config(page_title="Strava Monitor", layout="wide")
 st.title("Strava Activity Tracker")
-
-def local_css(file_name):
-    """
-    Injects local CSS styles into a Streamlit app.
-
-    Parameters:
-    file_name (str): The path to the local CSS file to be included.
-    """
-    with open(file_name) as f:
-        st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
 
 local_css("assets/styles.css")
 
@@ -68,31 +62,13 @@ try:
     with cols[0]:
         start_date = st.date_input("Start Date", default_start_date)
     
-    # Define the *current* start of the filtered date
-    start_ts = int(datetime.combine(start_date, datetime.min.time()).timestamp())
+    df, kpis = load_current_year_data(token, start_date)
 
-    # Load *current* activities data
-    activities = get_strava_activities(token, after=start_ts, activity_types=['Run'])
-
-    if not activities:
+    if df.empty:
         st.warning("No activities found for this period.")
     else:
-        # *Current* data
-        df, kpis = get_df_and_kpis(activities)
-
-        # Define the *past* start of the filtered date
-        start_last_year, end_last_year = get_last_year_range(start_date)
-        start_ts_last_year = int(datetime.combine(start_last_year, datetime.min.time()).timestamp())
-        end_ts_last_year = int(datetime.combine(end_last_year, datetime.max.time()).timestamp())
-
-        # Load *past* activities data
-        activities_last_year = get_strava_activities(token, after=start_ts_last_year, activity_types=['Run'])
-        activities_last_year = [act for act in activities_last_year if pd.to_datetime(act["start_date"]).timestamp() <= end_ts_last_year]
+        df_last_year, kpis_last_year = load_last_year_data(token, start_date)
         
-        # *Past* data
-        df_last_year, kpis_last_year = get_df_and_kpis(activities_last_year)
-
-        # Compute comparisons *current* versus *past* data
         comparisons = compute_all_comparisons(kpis, kpis_last_year)
 
         # KPI card
@@ -126,58 +102,10 @@ try:
 
         # Line chart with markers
         with st.container():
-            if period == "Week":
-                df["period"] = df["start_date"].dt.tz_localize(None).dt.to_period("W").dt.start_time
-                all_periods = pd.date_range(start=start_date, end=datetime.now(), freq="W-MON")
-                period_label = [f"Week of {d.strftime('%b %d')}" for d in all_periods]
-            else:
-                df["period"] = df["start_date"].dt.tz_localize(None).dt.to_period("M").dt.start_time
-                all_periods = pd.date_range(start=start_date, end=datetime.now(), freq="MS")
-                period_label = [d.strftime('%B') for d in all_periods]
+            grouped_df, period_label = process_period(df, start_date, period_type=period)
+            average_distance = add_average_line(grouped_df)
 
-            all_periods_df = pd.DataFrame({
-                "period": pd.to_datetime(all_periods),
-                "label": period_label
-            })
-
-            grouped_df = df.groupby("period")["distance_km"].sum().reset_index()
-            grouped_df = pd.merge(all_periods_df, grouped_df, on="period", how="left")
-            grouped_df["distance_km"] = grouped_df["distance_km"].fillna(0)
-
-            # Calculating the average distance
-            average_distance = grouped_df["distance_km"].mean()
-
-            # Plotting the line chart with markers
-            fig = px.line(
-                grouped_df,
-                x="label",
-                y="distance_km",
-                title=f"{period}ly Distance Trend",
-                labels={"label": period, "distance_km": "Distance (km)"},
-                markers=True,  # Adding markers
-                color_discrete_sequence=[ORANGE_PRIMARY_COLOR]
-            )
-
-            fig.update_traces(marker=dict(size=8, symbol="circle"))
-
-            # Adding a horizontal line for the average
-            fig.add_hline(
-                y=average_distance,
-                line=dict(color="gray", dash="dash", width=1),
-                annotation_text=f"Average: {average_distance:.0f} km",
-                annotation_position="bottom right",
-                annotation_font_size=12,
-                annotation_font_color="white"
-            )
-
-            fig.update_layout(
-                xaxis_title=period,
-                yaxis_title="Distance (km)",
-                template="plotly_dark",
-                title_font_color="#FFFFFF",
-                font_color="white",
-                showlegend=False
-            )
+            fig = display_distance_trend_chart(grouped_df, average_distance, period_type=period)
 
             st.plotly_chart(fig, use_container_width=True)
 
