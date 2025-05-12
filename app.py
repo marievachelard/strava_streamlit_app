@@ -12,8 +12,7 @@ from components.profile_card import display_profile_card
 from config import ORANGE_PRIMARY_COLOR, kpi_config
 
 from services.data_processing import (
-    preprocess_activities,
-    compute_kpis,
+    get_df_and_kpis,
     get_last_year_range,
     compute_all_comparisons
 )
@@ -79,8 +78,7 @@ try:
         st.warning("No activities found for this period.")
     else:
         # *Current* data
-        df = preprocess_activities(activities)
-        kpis = compute_kpis(df)
+        df, kpis = get_df_and_kpis(activities)
 
         # Define the *past* start of the filtered date
         start_last_year, end_last_year = get_last_year_range(start_date)
@@ -92,8 +90,7 @@ try:
         activities_last_year = [act for act in activities_last_year if pd.to_datetime(act["start_date"]).timestamp() <= end_ts_last_year]
         
         # *Past* data
-        df_last_year = preprocess_activities(activities_last_year)
-        kpis_last_year = compute_kpis(df_last_year)
+        df_last_year, kpis_last_year = get_df_and_kpis(activities_last_year)
 
         # Compute comparisons *current* versus *past* data
         comparisons = compute_all_comparisons(kpis, kpis_last_year)

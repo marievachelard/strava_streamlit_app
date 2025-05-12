@@ -49,6 +49,23 @@ def compute_kpis(df):
         "avg_elevation": avg_elevation
     }
 
+def get_df_and_kpis(activities):
+    """
+    Processes raw activity data into a cleaned DataFrame and computes KPIs.
+
+    Parameters:
+    activities (list[dict]): A list of activity records, typically from the Strava API.
+
+    Returns:
+    tuple: 
+        - df (pd.DataFrame): A cleaned and preprocessed DataFrame of activities.
+        - kpis (dict): A dictionary containing computed key performance indicators (KPIs).
+    """
+    df = preprocess_activities(activities)
+    kpis = compute_kpis(df)
+
+    return df, kpis
+
 def get_last_year_range(start_date):
     """
     Get the date range corresponding to the previous year for the selected period.
