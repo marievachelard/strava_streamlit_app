@@ -1,5 +1,6 @@
 import pandas as pd
 from datetime import datetime, timedelta
+from api.activities import get_strava_activities
 
 def preprocess_activities(raw_activities):
     """
@@ -66,6 +67,25 @@ def get_df_and_kpis(activities):
 
     return df, kpis
 
+def load_current_year_data(token, start_date, activity_type="Run"):
+    """
+    Fetches and preprocesses activities from Strava and calculates KPIs.
+
+    Args:
+        token (str): The authentication token for the Strava athlete.
+        start_date (datetime): The start date for fetching activities.
+        activity_type (str): The type of activity to fetch (default is "Run").
+
+    Returns:
+        tuple: A tuple containing:
+            - df (pd.DataFrame): Processed activities in a DataFrame.
+            - kpis (dict): Calculated KPIs for the activities.
+    """
+    start_ts = int(datetime.combine(start_date, datetime.min.time()).timestamp())
+    activities = get_strava_activities(token, after=start_ts, activity_types=[activity_type])
+    return get_df_and_kpis(activities)
+
+
 def get_last_year_range(start_date):
     """
     Get the date range corresponding to the previous year for the selected period.
@@ -80,6 +100,32 @@ def get_last_year_range(start_date):
     start_last_year = start_date - timedelta(days=365)
     end_last_year = start_last_year + timedelta(days=period_days)
     return start_last_year, end_last_year
+
+def load_last_year_data(token, start_date, activity_type="Run"):
+    """
+    Fetches activities from the previous year within a date range for comparison.
+
+    Args:
+        token (str): The authentication token for the Strava athlete.
+        start_date (datetime): The start date for fetching activities.
+        activity_type (str): The type of activity to fetch (default is "Run").
+
+    Returns:
+        tuple: A tuple containing:
+            - df_last_year (pd.DataFrame): Processed activities from last year in a DataFrame.
+            - kpis_last_year (dict): Calculated KPIs for the activities from last year.
+    """
+    start_last_year, end_last_year = get_last_year_range(start_date)
+    start_ts = int(datetime.combine(start_last_year, datetime.min.time()).timestamp())
+    end_ts = int(datetime.combine(end_last_year, datetime.max.time()).timestamp())
+
+    activities = get_strava_activities(token, after=start_ts, activity_types=[activity_type])
+    activities = [
+        act for act in activities
+        if pd.to_datetime(act["start_date"]).timestamp() <= end_ts
+    ]
+
+    return get_df_and_kpis(activities)
 
 def compute_all_comparisons(kpis_current, kpis_last_year):
     """
@@ -107,3 +153,48 @@ def compute_all_comparisons(kpis_current, kpis_last_year):
             }
 
     return comparisons
+
+def process_period(df, start_date, period_type="Week"):
+    """
+    Process and group activities into weekly or monthly periods.
+
+    Args:
+        df (pd.DataFrame): The DataFrame containing activity data.
+        start_date (datetime): The start date of the period for filtering activities.
+        period_type (str): The type of period ('Week' or 'Month').
+
+    Returns:
+        pd.DataFrame: DataFrame with aggregated distance per period and associated labels.
+    """
+    if period_type == "Week":
+        df["period"] = df["start_date"].dt.to_period("W").dt.start_time
+        all_periods = pd.date_range(start=start_date, end=datetime.now(), freq="W-MON")
+        period_label = [f"Week of {d.strftime('%b %d')}" for d in all_periods]
+    else:
+        df["period"] = df["start_date"].dt.to_period("M").dt.start_time
+        all_periods = pd.date_range(start=start_date, end=datetime.now(), freq="MS")
+        period_label = [d.strftime('%B') for d in all_periods]
+
+    all_periods_df = pd.DataFrame({
+        "period": pd.to_datetime(all_periods),
+        "label": period_label
+    })
+
+    grouped_df = df.groupby("period")["distance_km"].sum().reset_index()
+    grouped_df = pd.merge(all_periods_df, grouped_df, on="period", how="left")
+    grouped_df["distance_km"] = grouped_df["distance_km"].fillna(0)
+    
+    return grouped_df, period_label
+
+def add_average_line(grouped_df):
+    """
+    Calculate and add the average distance line to the grouped DataFrame.
+
+    Args:
+        grouped_df (pd.DataFrame): The DataFrame containing aggregated activity data.
+
+    Returns:
+        float: The average distance across all periods.
+    """
+    average_distance = grouped_df["distance_km"].mean()
+    return average_distance
