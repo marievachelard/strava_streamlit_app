@@ -54,8 +54,12 @@ try:
         description=description
     )
 
-    # Load all time data
-    df_all, _ = load_all_time_data(token)
+    # Cache session: all data
+    if "df_all" not in st.session_state:
+        df_all, _ = load_all_time_data(token)
+        st.session_state.df_all = df_all
+    else:
+        df_all = st.session_state.df_all
     best_efforts = get_best_efforts(df_all)
 
     # Best efforts
@@ -71,13 +75,37 @@ try:
     cols = st.columns(4)
     with cols[0]:
         start_date = st.date_input("Start Date", default_start_date)
+
+        # Cache session: date filter
+        if "start_date_cache" not in st.session_state:
+            st.session_state.start_date_cache = start_date
+
+        if start_date != st.session_state.start_date_cache:
+            st.session_state.start_date_cache = start_date
+            for key in ["df", "kpis", "df_last", "kpis_last"]:
+                st.session_state.pop(key, None)
     
-    df, kpis = load_current_year_data(token, start_date)
+    # Cache session: current year
+    if "df" not in st.session_state or "kpis" not in st.session_state:
+        df, kpis = load_current_year_data(token, start_date)
+        st.session_state.df = df
+        st.session_state.kpis = kpis
+    else:
+        df = st.session_state.df
+        kpis = st.session_state.kpis
+
 
     if df.empty:
         st.warning("No activities found for this period.")
     else:
-        df_last_year, kpis_last_year = load_last_year_data(token, start_date)
+        # Cache session: last year
+        if "df_last" not in st.session_state or "kpis_last" not in st.session_state:
+            df_last_year, kpis_last_year = load_last_year_data(token, start_date)
+            st.session_state.df_last = df_last_year
+            st.session_state.kpis_last = kpis_last_year
+        else:
+            df_last_year = st.session_state.df_last
+            kpis_last_year = st.session_state.kpis_last
         
         comparisons = compute_all_comparisons(kpis, kpis_last_year)
 

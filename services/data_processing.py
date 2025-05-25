@@ -1,3 +1,4 @@
+import streamlit as st
 import pandas as pd
 from datetime import datetime, timedelta
 from api.activities import get_strava_activities
@@ -67,6 +68,7 @@ def get_df_and_kpis(activities):
 
     return df, kpis
 
+@st.cache_data(show_spinner="📥 Loading current year activities from Strava...")
 def load_current_year_data(token, start_date, activity_type="Run"):
     """
     Fetches and preprocesses activities from Strava and calculates KPIs.
@@ -100,6 +102,7 @@ def get_last_year_range(start_date):
     end_last_year = start_last_year + timedelta(days=period_days)
     return start_last_year, end_last_year
 
+@st.cache_data(show_spinner="📥 Loading last year activities from Strava...")
 def load_last_year_data(token, start_date, activity_type="Run"):
     """
     Fetches activities from the previous year within a date range for comparison.
@@ -198,6 +201,7 @@ def add_average_line(grouped_df):
     average_distance = grouped_df["distance_km"].mean()
     return average_distance
 
+@st.cache_data(show_spinner="📥 Loading all-time activities from Strava...")
 def load_all_time_data(token, activity_type="Run"):
     """
     Loads and preprocesses all-time activity data from Strava.
