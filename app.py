@@ -13,8 +13,10 @@ from components.distance_chart import display_distance_trend_chart
 from config import kpi_config
 
 from services.data_processing import (
+    load_all_time_data,
     load_current_year_data,
     load_last_year_data,
+    get_best_times,
     compute_all_comparisons,
     process_period,
     add_average_line
@@ -50,6 +52,23 @@ try:
         location=location,
         description=description
     )
+
+    # Load all time data
+    df_all, _ = load_all_time_data(token)
+    best_times = get_best_times(df_all)
+
+    # Best efforts
+    st.sidebar.markdown("### 🏅 All-Time Best Efforts")
+
+    for label, result in best_times.items():
+        if result:
+            minutes = int(result["time_sec"] // 60)
+            seconds = int(result["time_sec"] % 60)
+            st.sidebar.markdown(
+                f"**{label}**: {minutes}m {seconds}s  \n📅 {result['date']}  \n📏 {result['distance']} km"
+            )
+        else:
+            st.sidebar.markdown(f"**{label}**: _No matching run found_")
 
     # --------------- #
     # -- MAIN AREA -- #
