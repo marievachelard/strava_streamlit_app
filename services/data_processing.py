@@ -214,7 +214,7 @@ def load_all_time_data(token, activity_type="Run"):
     activities = get_strava_activities(token, after=0, activity_types=[activity_type])
     return get_df_and_kpis(activities)
 
-def get_best_times(df, thresholds=[(10, "10 km"), (21.1, "Half Marathon"), (42.2, "Marathon")]):
+def get_best_efforts(df, thresholds=[(10, "10K"), (21.1, "Half"), (42.2, "Marathon")]):
     """
     Find the best all-time times for standard race distances.
 
@@ -225,7 +225,7 @@ def get_best_times(df, thresholds=[(10, "10 km"), (21.1, "Half Marathon"), (42.2
     Returns:
         dict: Best times per distance with time, date, and exact distance.
     """
-    best_times = {}
+    best_efforts = {}
 
     for target_distance, label in thresholds:
         lower = target_distance * 0.99
@@ -236,12 +236,11 @@ def get_best_times(df, thresholds=[(10, "10 km"), (21.1, "Half Marathon"), (42.2
 
         if not filtered.empty:
             best_activity = filtered.loc[filtered["moving_time"].idxmin()]
-            best_times[label] = {
+            best_efforts[label] = {
                 "time_sec": best_activity["moving_time"],
-                "date": best_activity["start_date"].date(),
-                "distance": round(best_activity["distance_km"], 2)
+                "date": best_activity["start_date"].date()
             }
         else:
-            best_times[label] = None
+            best_efforts[label] = None
 
-    return best_times
+    return best_efforts

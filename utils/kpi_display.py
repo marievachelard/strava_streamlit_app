@@ -1,16 +1,5 @@
 from components.kpi_card import display_kpi_card
-
-def format_duration(seconds):
-    hours = int(seconds // 3600)
-    minutes = int((seconds % 3600) // 60)
-    return f"{hours}h {minutes}min"
-
-def format_duration_diff(seconds_diff):
-    sign = "+" if seconds_diff >= 0 else "-"
-    seconds_diff = abs(seconds_diff)
-    hours = int(seconds_diff // 3600)
-    minutes = int((seconds_diff % 3600) // 60)
-    return f"{sign}{hours}h {minutes}min"
+from utils.duration import format_duration, format_duration_diff
 
 def display_kpi_with_comparison(col, icon, label, value, comparison, unit="", is_duration=False):
     if is_duration:

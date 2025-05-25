@@ -8,6 +8,7 @@ from api.athlete import get_athlete_profile
 from api.activities import get_strava_activities
 
 from components.profile_card import display_profile_card
+from components.best_efforts_card import display_best_efforts
 from components.distance_chart import display_distance_trend_chart
 
 from config import kpi_config
@@ -16,7 +17,7 @@ from services.data_processing import (
     load_all_time_data,
     load_current_year_data,
     load_last_year_data,
-    get_best_times,
+    get_best_efforts,
     compute_all_comparisons,
     process_period,
     add_average_line
@@ -55,20 +56,10 @@ try:
 
     # Load all time data
     df_all, _ = load_all_time_data(token)
-    best_times = get_best_times(df_all)
+    best_efforts = get_best_efforts(df_all)
 
     # Best efforts
-    st.sidebar.markdown("### 🏅 All-Time Best Efforts")
-
-    for label, result in best_times.items():
-        if result:
-            minutes = int(result["time_sec"] // 60)
-            seconds = int(result["time_sec"] % 60)
-            st.sidebar.markdown(
-                f"**{label}**: {minutes}m {seconds}s  \n📅 {result['date']}  \n📏 {result['distance']} km"
-            )
-        else:
-            st.sidebar.markdown(f"**{label}**: _No matching run found_")
+    display_best_efforts(best_efforts)
 
     # --------------- #
     # -- MAIN AREA -- #
