@@ -1,25 +1,33 @@
 import os
-import base64
 import json
 import requests
-
-def get_strava_credentials():
-    base64_content = os.environ.get("STRAVA_CREDENTIALS")
-    if base64_content and base64_content.startswith("STRAVA_CREDENTIALS="):
-        base64_content = base64_content.replace("STRAVA_CREDENTIALS=", "")
-    return json.loads(base64.b64decode(base64_content))
+import streamlit as st
 
 def get_strava_access_token():
-    creds = get_strava_credentials()
+    # Environnement cloud : secrets
+    if st.secrets.get("strava"):
+        client_id = st.secrets["strava"]["client_id"]
+        client_secret = st.secrets["strava"]["client_secret"]
+        refresh_token = st.secrets["strava"]["refresh_token"]
+    else:
+        # Environnement local : fichier JSON
+        with open("strava_token/strava_credentials.json", "r") as file:
+            creds = json.load(file)
+            client_id = creds["client_id"]
+            client_secret = creds["client_secret"]
+            refresh_token = creds["refresh_token"]
+
     response = requests.post(
-        "https://www.strava.com/oauth/token",
+        url="https://www.strava.com/api/v3/oauth/token",
         data={
-            'client_id': creds['client_id'],
-            'client_secret': creds['client_secret'],
-            'refresh_token': creds['refresh_token'],
-            'grant_type': 'refresh_token'
+            "client_id": client_id,
+            "client_secret": client_secret,
+            "grant_type": "refresh_token",
+            "refresh_token": refresh_token
         }
     )
+
     if response.status_code != 200:
-        raise Exception("❌ Token refresh failed")
+        raise Exception(f"Failed to refresh Strava token: {response.text}")
+
     return response.json()["access_token"]
