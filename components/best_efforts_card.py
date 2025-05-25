@@ -1,10 +1,10 @@
 import streamlit as st
 from utils.duration import format_duration
 
-def display_best_times(best_times: dict):
+def display_best_efforts(best_efforts: dict):
     st.sidebar.markdown("## 🏅 All-Time Best Efforts")
 
-    for label, result in best_times.items():
+    for label, result in best_efforts.items():
         if result:
             formatted_time = format_duration(result["time_sec"])
 

@@ -8,7 +8,7 @@ from api.athlete import get_athlete_profile
 from api.activities import get_strava_activities
 
 from components.profile_card import display_profile_card
-from components.best_times_card import display_best_times
+from components.best_efforts_card import display_best_efforts
 from components.distance_chart import display_distance_trend_chart
 
 from config import kpi_config
@@ -17,7 +17,7 @@ from services.data_processing import (
     load_all_time_data,
     load_current_year_data,
     load_last_year_data,
-    get_best_times,
+    get_best_efforts,
     compute_all_comparisons,
     process_period,
     add_average_line
@@ -56,10 +56,10 @@ try:
 
     # Load all time data
     df_all, _ = load_all_time_data(token)
-    best_times = get_best_times(df_all)
+    best_efforts = get_best_efforts(df_all)
 
     # Best efforts
-    display_best_times(best_times)
+    display_best_efforts(best_efforts)
 
     # --------------- #
     # -- MAIN AREA -- #
