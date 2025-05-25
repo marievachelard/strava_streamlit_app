@@ -85,7 +85,6 @@ def load_current_year_data(token, start_date, activity_type="Run"):
     activities = get_strava_activities(token, after=start_ts, activity_types=[activity_type])
     return get_df_and_kpis(activities)
 
-
 def get_last_year_range(start_date):
     """
     Get the date range corresponding to the previous year for the selected period.
@@ -198,3 +197,51 @@ def add_average_line(grouped_df):
     """
     average_distance = grouped_df["distance_km"].mean()
     return average_distance
+
+def load_all_time_data(token, activity_type="Run"):
+    """
+    Loads and preprocesses all-time activity data from Strava.
+
+    Args:
+        token (str): Strava access token.
+        activity_type (str): Type of activity to filter for (default: "Run").
+
+    Returns:
+        tuple:
+            - df (pd.DataFrame): Preprocessed DataFrame of all activities.
+            - kpis (dict): KPIs for the full dataset.
+    """
+    activities = get_strava_activities(token, after=0, activity_types=[activity_type])
+    return get_df_and_kpis(activities)
+
+def get_best_times(df, thresholds=[(10, "10 km"), (21.1, "Half Marathon"), (42.2, "Marathon")]):
+    """
+    Find the best all-time times for standard race distances.
+
+    Args:
+        df (pd.DataFrame): Preprocessed Strava activity data.
+        thresholds (list): List of tuples with (target distance in km, label).
+
+    Returns:
+        dict: Best times per distance with time, date, and exact distance.
+    """
+    best_times = {}
+
+    for target_distance, label in thresholds:
+        lower = target_distance * 0.99
+        upper = target_distance * 1.01
+
+        mask = df["distance_km"].between(lower, upper)
+        filtered = df[mask]
+
+        if not filtered.empty:
+            best_activity = filtered.loc[filtered["moving_time"].idxmin()]
+            best_times[label] = {
+                "time_sec": best_activity["moving_time"],
+                "date": best_activity["start_date"].date(),
+                "distance": round(best_activity["distance_km"], 2)
+            }
+        else:
+            best_times[label] = None
+
+    return best_times
