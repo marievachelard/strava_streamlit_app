@@ -30,7 +30,7 @@ The colors used in this application are defined as follows in the CSS code:
 
 ## 🖼️ Demo
 
-To do
+[Strava Activity Tracker](https://strava-activity-tracker.streamlit.app/)
 
 ## ⚙️ Installation
 
