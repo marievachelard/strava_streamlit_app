@@ -16,10 +16,10 @@ def display_distance_trend_chart(grouped_df, average_distance, period_type):
     """
     fig = px.line(
         grouped_df,
-        x="label",
+        x="period",
         y="distance_km",
         title=f"{period_type}ly Distance Trend",
-        labels={"label": period_type, "distance_km": "Distance (km)"},
+        labels={"period": period_type, "distance_km": "Distance (km)"},
         markers=True,
         color_discrete_sequence=[ORANGE_PRIMARY_COLOR]
     )
@@ -42,6 +42,10 @@ def display_distance_trend_chart(grouped_df, average_distance, period_type):
         title_font_color="#FFFFFF",
         font_color="white",
         showlegend=False
+    )
+
+    fig.update_xaxes(
+        tickformat="%b %Y" if period_type == "Month" else "W%W %Y"
     )
 
     return fig
