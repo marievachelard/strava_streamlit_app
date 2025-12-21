@@ -155,4 +155,8 @@ try:
             st.plotly_chart(fig, use_container_width=True)
 
 except Exception as e:
-    st.error(f"❌ Error: {e}")
+    # In case of rate limit
+    if "429" in str(e):
+        st.error("🚦 Strava API rate limit reached. Please wait a few minutes and try again.")
+    else:
+        st.error(f"❌ Error: {e}")
