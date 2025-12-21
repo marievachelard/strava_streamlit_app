@@ -69,11 +69,12 @@ try:
     # -- MAIN AREA -- #
     # --------------- #
 
-    if "dates_applied" not in st.session_state:
-        st.session_state.dates_applied = False
-
     # Date filter
     default_start_date = datetime.now() - timedelta(days=30)
+
+    # Initialize session state for Apply button
+    if "dates_applied" not in st.session_state:
+        st.session_state.dates_applied = False
     
     cols = st.columns(4)
     with cols[0]:
@@ -99,6 +100,14 @@ try:
         for key in ["df", "kpis", "df_last", "kpis_last"]:
             if key in st.session_state:
                 st.session_state.pop(key)
+    
+    # Block loading until user clicks Apply
+    if not st.session_state.dates_applied:
+        st.info("📅 Please select a start and end date, then click Apply")
+        st.stop()
+
+    # Use confirmed date range
+    start_date, end_date = st.session_state.date_range_cache
     
     # Cache session: current year
     if "df" not in st.session_state or "kpis" not in st.session_state:
