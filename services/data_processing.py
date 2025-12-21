@@ -15,7 +15,7 @@ def preprocess_activities(raw_activities):
         pd.DataFrame: A cleaned DataFrame with preprocessed activity data.
     """
     df = pd.DataFrame(raw_activities)
-    df["start_date"] = pd.to_datetime(df["start_date"])
+    df["start_date"] = pd.to_datetime(df["start_date"], utc=True).dt.tz_localize(None)
     df["distance_km"] = df["distance"] / 1000
     df["avg_speed_kmh"] = df["distance_km"] / (df["moving_time"] / 3600)
     df = df.sort_values("start_date")
@@ -167,59 +167,77 @@ def compute_all_comparisons(kpis_current, kpis_last_year):
 
     return comparisons
 
-def process_period(df, start_date, end_date, period_type="Week", year_offset=0):
+def process_period(df, start_date, end_date, period_type="Week"):
     """
-    Aggregate and label activity data by week or month for visualization purposes.
-    Can shift the data by 'year_offset' years (useful for last-year comparison).
+    Agrège et étiquette les données d'activité par semaine ISO ou par mois.
+    Remplit les périodes sans activité avec 0 km et indique si la période est partielle.
 
     Args:
-        df (pd.DataFrame): Activity DataFrame with 'start_date' and 'distance_km'.
-        start_date (datetime): Start date for aggregation.
-        end_date (datetime): End date for aggregation.
-        period_type (str): "Week" or "Month".
-        year_offset (int): Shift the period by number of years (e.g., -1 for last year).
+        df (pd.DataFrame): Activités avec colonne 'start_date' et 'distance_km'.
+        start_date (datetime.date): Début de la plage sélectionnée.
+        end_date (datetime.date): Fin de la plage sélectionnée.
+        period_type (str): "Week" ou "Month".
 
     Returns:
-        tuple: grouped_df, period_type
-            grouped_df contains columns:
-                - 'period_index': index de la période (0,1,2...) pour aligner les courbes
-                - 'period': date de début de la période
-                - 'label': texte à afficher sur l'axe X
-                - 'distance_km': distance totale de la période
+        pd.DataFrame: DataFrame avec colonnes :
+            - period_index : index relatif pour X
+            - period_start : début de la période
+            - period_end : fin de la période
+            - label : texte à afficher sur l’axe X
+            - distance_km : distance totale
     """
     df = df.copy()
     df["start_date"] = pd.to_datetime(df["start_date"])
 
-    # Décaler les dates si besoin
-    start_date_shifted = start_date + pd.DateOffset(years=year_offset)
-    end_date_shifted = end_date + pd.DateOffset(years=year_offset)
-
     if period_type == "Week":
-        df["period"] = df["start_date"].dt.to_period("W").apply(lambda r: r.start_time)
-        all_periods = pd.date_range(start=start_date_shifted, end=end_date_shifted, freq="W-MON")
-        labels = [f"W{d.isocalendar().week} {d.year}" for d in all_periods]
-    else:  # Month
-        df["period"] = df["start_date"].dt.to_period("M").apply(lambda r: r.start_time)
-        all_periods = pd.date_range(start=start_date_shifted, end=end_date_shifted, freq="MS")
-        labels = [d.strftime("%b %Y") for d in all_periods]
+        df["iso_year"] = df["start_date"].dt.isocalendar().year
+        df["iso_week"] = df["start_date"].dt.isocalendar().week
+        df["period"] = df["iso_year"].astype(str) + "-W" + df["iso_week"].astype(str)
 
-    all_periods_df = pd.DataFrame({
-        "period_index": range(len(all_periods)),  # index relatif pour X
+        start_iso = start_date.isocalendar()
+        end_iso = end_date.isocalendar()
+        weeks = pd.date_range(start=start_date, end=end_date, freq="D").to_frame(index=False)
+        weeks["iso_year"] = weeks[0].dt.isocalendar().year
+        weeks["iso_week"] = weeks[0].dt.isocalendar().week
+        weeks["period"] = weeks["iso_year"].astype(str) + "-W" + weeks["iso_week"].astype(str)
+        all_periods = weeks["period"].drop_duplicates().reset_index(drop=True)
+
+        period_bounds = []
+        for p in all_periods:
+            y, w = map(int, p.split("-W"))
+
+            start_of_week = datetime.fromisocalendar(y, w, 1).date()
+            end_of_week = datetime.fromisocalendar(y, w, 7).date()
+
+            start_of_week = max(start_of_week, start_date)
+            end_of_week = min(end_of_week, end_date)
+            period_bounds.append((start_of_week, end_of_week))
+
+    else:  # Month
+        df["period"] = df["start_date"].dt.to_period("M").astype(str)
+        all_periods = pd.period_range(start=start_date, end=end_date, freq="M").astype(str)
+        period_bounds = []
+        for p in all_periods:
+            start_of_month = pd.to_datetime(p).date()
+            end_of_month = (pd.to_datetime(p) + pd.offsets.MonthEnd(0)).date()
+            start_of_month = max(start_of_month, start_date)
+            end_of_month = min(end_of_month, end_date)
+            period_bounds.append((start_of_month, end_of_month))
+
+    grouped = df.groupby("period")["distance_km"].sum().reset_index()
+
+    final_df = pd.DataFrame({
+        "period_index": range(len(all_periods)),
         "period": all_periods,
-        "label": labels
+        "period_start": [b[0] for b in period_bounds],
+        "period_end": [b[1] for b in period_bounds],
+        "label": [f"W{p.split('-W')[-1]} {p.split('-W')[0]}" if period_type=="Week" else p for p in all_periods]
     })
 
-    grouped_df = df.groupby("period")["distance_km"].sum().reset_index()
+    final_df = final_df.merge(grouped, on="period", how="left")
+    final_df["distance_km"] = final_df["distance_km"].fillna(0)
 
-    grouped_df = pd.merge(
-        all_periods_df,
-        grouped_df,
-        on="period",
-        how="left"
-    )
-    grouped_df["distance_km"] = grouped_df["distance_km"].fillna(0)
-
-    return grouped_df, period_type
+    return final_df, period_type
 
 def add_average_line(grouped_df):
     """
