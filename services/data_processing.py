@@ -69,7 +69,7 @@ def get_df_and_kpis(activities):
     return df, kpis
 
 @st.cache_data(show_spinner="📥 Loading current year activities from Strava...")
-def load_current_year_data(token, start_date, activity_type="Run"):
+def load_current_year_data(token, start_date, end_date, activity_type="Run"):
     """
     Fetches and preprocesses activities from Strava and calculates KPIs.
 
@@ -84,7 +84,18 @@ def load_current_year_data(token, start_date, activity_type="Run"):
             - kpis (dict): Calculated KPIs for the activities.
     """
     start_ts = int(datetime.combine(start_date, datetime.min.time()).timestamp())
-    activities = get_strava_activities(token, after=start_ts, activity_types=[activity_type])
+    end_ts = int(datetime.combine(end_date, datetime.max.time()).timestamp())
+
+    activities = get_strava_activities(
+        token,
+        after=start_ts,
+        activity_types=[activity_type]
+    )
+
+    activities = [
+        act for act in activities
+        if pd.to_datetime(act["start_date"]).timestamp() <= end_ts
+    ]
     return get_df_and_kpis(activities)
 
 def get_last_year_range(start_date):

@@ -90,7 +90,7 @@ try:
     
     # Cache session: current year
     if "df" not in st.session_state or "kpis" not in st.session_state:
-        df, kpis = load_current_year_data(token, start_date)
+        df, kpis = load_current_year_data(token, start_date, end_date)
         st.session_state.df = df
         st.session_state.kpis = kpis
     else:
