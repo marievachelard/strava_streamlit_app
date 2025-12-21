@@ -194,7 +194,7 @@ def process_period(df, start_date, end_date, period_type="Week"):
 
     if period_type == "Week":
         df["period"] = df["start_date"].dt.to_period("W").apply(lambda r: r.start_time)
-        all_periods = pd.date_range(start=start_date, end=dend_date, freq="W-MON")
+        all_periods = pd.date_range(start=start_date, end=end_date, freq="W-MON")
         labels = [f"W{d.isocalendar().week} {d.year}" for d in all_periods]
 
     else:  # Month
