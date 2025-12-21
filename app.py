@@ -78,6 +78,9 @@ try:
 
     with cols[1]:
         end_date = st.date_input("End Date", datetime.now())
+
+    with cols[2]:
+        apply_dates = st.button("Apply", type="primary")
     
     if start_date > end_date:
         st.error("❌ Start date must be before end date")
