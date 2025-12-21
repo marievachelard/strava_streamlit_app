@@ -143,7 +143,7 @@ try:
 
         # Line chart with markers
         with st.container():
-            grouped_df, period_label = process_period(df, start_date, period_type=period)
+            grouped_df, period_label = process_period(df, start_date, end_date, period_type=period)
             average_distance = add_average_line(grouped_df)
 
             fig = display_distance_trend_chart(grouped_df, average_distance, period_type=period)
