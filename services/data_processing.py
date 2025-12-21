@@ -190,12 +190,10 @@ def process_period(df, start_date, end_date, period_type="Week"):
     df["start_date"] = pd.to_datetime(df["start_date"])
 
     if period_type == "Week":
-        # Calculer la semaine ISO
         df["iso_year"] = df["start_date"].dt.isocalendar().year
         df["iso_week"] = df["start_date"].dt.isocalendar().week
         df["period"] = df["iso_year"].astype(str) + "-W" + df["iso_week"].astype(str)
 
-        # Toutes les semaines dans la plage sélectionnée
         start_iso = start_date.isocalendar()
         end_iso = end_date.isocalendar()
         weeks = pd.date_range(start=start_date, end=end_date, freq="D").to_frame(index=False)
@@ -204,14 +202,13 @@ def process_period(df, start_date, end_date, period_type="Week"):
         weeks["period"] = weeks["iso_year"].astype(str) + "-W" + weeks["iso_week"].astype(str)
         all_periods = weeks["period"].drop_duplicates().reset_index(drop=True)
 
-        # Calcul des bornes exactes des semaines
         period_bounds = []
         for p in all_periods:
             y, w = map(int, p.split("-W"))
-            # 1er jour de la semaine ISO
+
             start_of_week = datetime.fromisocalendar(y, w, 1).date()
             end_of_week = datetime.fromisocalendar(y, w, 7).date()
-            # Limiter à la plage sélectionnée
+
             start_of_week = max(start_of_week, start_date)
             end_of_week = min(end_of_week, end_date)
             period_bounds.append((start_of_week, end_of_week))
@@ -227,10 +224,8 @@ def process_period(df, start_date, end_date, period_type="Week"):
             end_of_month = min(end_of_month, end_date)
             period_bounds.append((start_of_month, end_of_month))
 
-    # Grouper les distances
     grouped = df.groupby("period")["distance_km"].sum().reset_index()
 
-    # Créer le DataFrame final avec toutes les périodes
     final_df = pd.DataFrame({
         "period_index": range(len(all_periods)),
         "period": all_periods,
@@ -239,7 +234,6 @@ def process_period(df, start_date, end_date, period_type="Week"):
         "label": [f"W{p.split('-W')[-1]} {p.split('-W')[0]}" if period_type=="Week" else p for p in all_periods]
     })
 
-    # Merge les distances, remplir 0 si pas d'activité
     final_df = final_df.merge(grouped, on="period", how="left")
     final_df["distance_km"] = final_df["distance_km"].fillna(0)
 
