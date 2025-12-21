@@ -162,8 +162,18 @@ try:
         # Line chart with markers
         with st.container():
             # Grouped data this year and year-1
-            grouped_df, _ = process_period(df, start_date, end_date, period_type=period)
-            grouped_last_df, _ = process_period(df_last_year, start_date, end_date, period_type=period, year_offset=-1)
+            grouped_df, _ = process_period(
+                df,
+                start_date,
+                end_date,
+                period_type=period
+                )
+            grouped_last_df, _ = process_period(
+                df_last_year,
+                start_date.replace(year=start_date.year - 1),
+                end_date.replace(year=end_date.year - 1),
+                period_type=period
+                )
 
             # Average line
             average_distance = grouped_df["distance_km"].mean()

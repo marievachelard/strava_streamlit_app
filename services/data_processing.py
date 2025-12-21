@@ -15,7 +15,7 @@ def preprocess_activities(raw_activities):
         pd.DataFrame: A cleaned DataFrame with preprocessed activity data.
     """
     df = pd.DataFrame(raw_activities)
-    df["start_date"] = pd.to_datetime(df["start_date"])
+    df["start_date"] = pd.to_datetime(df["start_date"], utc=True).dt.tz_localize(None)
     df["distance_km"] = df["distance"] / 1000
     df["avg_speed_kmh"] = df["distance_km"] / (df["moving_time"] / 3600)
     df = df.sort_values("start_date")
@@ -167,59 +167,47 @@ def compute_all_comparisons(kpis_current, kpis_last_year):
 
     return comparisons
 
-def process_period(df, start_date, end_date, period_type="Week", year_offset=0):
-    """
-    Aggregate and label activity data by week or month for visualization purposes.
-    Can shift the data by 'year_offset' years (useful for last-year comparison).
-
-    Args:
-        df (pd.DataFrame): Activity DataFrame with 'start_date' and 'distance_km'.
-        start_date (datetime): Start date for aggregation.
-        end_date (datetime): End date for aggregation.
-        period_type (str): "Week" or "Month".
-        year_offset (int): Shift the period by number of years (e.g., -1 for last year).
-
-    Returns:
-        tuple: grouped_df, period_type
-            grouped_df contains columns:
-                - 'period_index': index de la période (0,1,2...) pour aligner les courbes
-                - 'period': date de début de la période
-                - 'label': texte à afficher sur l'axe X
-                - 'distance_km': distance totale de la période
-    """
+def process_period(df, start_date, end_date, period_type="Week"):
     df = df.copy()
-    df["start_date"] = pd.to_datetime(df["start_date"])
+    df["start_date"] = pd.to_datetime(df["start_date"]).dt.tz_localize(None)
 
-    # Décaler les dates si besoin
-    start_date_shifted = start_date + pd.DateOffset(years=year_offset)
-    end_date_shifted = end_date + pd.DateOffset(years=year_offset)
+    # 1️⃣ Filtrage STRICT
+    df = df[
+        (df["start_date"].dt.date >= start_date) &
+        (df["start_date"].dt.date <= end_date)
+    ]
+
+    if df.empty:
+        return pd.DataFrame(columns=["period_index", "label", "distance_km"]), period_type
 
     if period_type == "Week":
-        df["period"] = df["start_date"].dt.to_period("W").apply(lambda r: r.start_time)
-        all_periods = pd.date_range(start=start_date_shifted, end=end_date_shifted, freq="W-MON")
-        labels = [f"W{d.isocalendar().week} {d.year}" for d in all_periods]
-    else:  # Month
-        df["period"] = df["start_date"].dt.to_period("M").apply(lambda r: r.start_time)
-        all_periods = pd.date_range(start=start_date_shifted, end=end_date_shifted, freq="MS")
-        labels = [d.strftime("%b %Y") for d in all_periods]
+        iso = df["start_date"].dt.isocalendar()
 
-    all_periods_df = pd.DataFrame({
-        "period_index": range(len(all_periods)),  # index relatif pour X
-        "period": all_periods,
-        "label": labels
-    })
+        df["iso_year"] = iso["year"]
+        df["iso_week"] = iso["week"]
 
-    grouped_df = df.groupby("period")["distance_km"].sum().reset_index()
+        df["label"] = df.apply(
+            lambda r: f"W{int(r.iso_week)} {int(r.iso_year)}",
+            axis=1
+        )
 
-    grouped_df = pd.merge(
-        all_periods_df,
-        grouped_df,
-        on="period",
-        how="left"
-    )
-    grouped_df["distance_km"] = grouped_df["distance_km"].fillna(0)
+        grouped = (
+            df.groupby(["iso_year", "iso_week", "label"], as_index=False)
+              .agg(distance_km=("distance_km", "sum"))
+              .sort_values(["iso_year", "iso_week"])
+        )
 
-    return grouped_df, period_type
+        grouped["period_index"] = range(len(grouped))
+
+    else:
+        grouped = (
+            df.groupby(df["start_date"].dt.to_period("M"), as_index=False)
+              .agg(distance_km=("distance_km", "sum"))
+        )
+        grouped["label"] = grouped["start_date"].dt.strftime("%b %Y")
+        grouped["period_index"] = range(len(grouped))
+
+    return grouped[["period_index", "label", "distance_km"]], period_type
 
 def add_average_line(grouped_df):
     """
