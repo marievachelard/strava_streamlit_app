@@ -3,6 +3,7 @@ import json
 import requests
 import streamlit as st
 
+@st.cache_data(ttl=3500)
 def get_strava_access_token():
     # Environnement cloud : secrets
     if st.secrets.get("strava"):

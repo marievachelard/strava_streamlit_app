@@ -1,5 +1,7 @@
+import streamlit as st
 import requests
 
+@st.cache_data(ttl=3600)
 def get_athlete_profile(access_token):
     headers = {"Authorization": f"Bearer {access_token}"}
     response = requests.get("https://www.strava.com/api/v3/athlete", headers=headers)
