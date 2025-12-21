@@ -69,6 +69,9 @@ try:
     # -- MAIN AREA -- #
     # --------------- #
 
+    if "dates_applied" not in st.session_state:
+        st.session_state.dates_applied = False
+
     # Date filter
     default_start_date = datetime.now() - timedelta(days=30)
     
