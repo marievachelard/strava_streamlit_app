@@ -78,6 +78,10 @@ try:
 
     with cols[1]:
         end_date = st.date_input("End Date", datetime.now())
+    
+    if start_date > end_date:
+        st.error("❌ Start date must be before end date")
+        st.stop()
 
     # Cache session: date filter
     if "date_range_cache" not in st.session_state:
