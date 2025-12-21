@@ -85,18 +85,20 @@ try:
     with cols[2]:
         apply_dates = st.button("Apply", type="primary")
     
-    if start_date > end_date:
-        st.error("❌ Start date must be before end date")
-        st.stop()
-
-    # Cache session: date filter
-    if "date_range_cache" not in st.session_state:
+    if apply_dates:
+        # Validate the date range
+        if start_date > end_date:
+            st.error("❌ Start date must be before end date")
+            st.stop()
+        
+        # Save confirmed date range
         st.session_state.date_range_cache = (start_date, end_date)
+        st.session_state.dates_applied = True
 
-    if (start_date, end_date) != st.session_state.date_range_cache:
-        st.session_state.date_range_cache = (start_date, end_date)
+        # Clear cached data so it reloads for the new range
         for key in ["df", "kpis", "df_last", "kpis_last"]:
-            st.session_state.pop(key, None)
+            if key in st.session_state:
+                st.session_state.pop(key)
     
     # Cache session: current year
     if "df" not in st.session_state or "kpis" not in st.session_state:
