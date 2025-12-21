@@ -76,6 +76,9 @@ try:
     with cols[0]:
         start_date = st.date_input("Start Date", default_start_date)
 
+    with cols[1]:
+        end_date = st.date_input("End Date", datetime.now())
+
         # Cache session: date filter
         if "start_date_cache" not in st.session_state:
             st.session_state.start_date_cache = start_date
