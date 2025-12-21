@@ -69,7 +69,7 @@ def get_df_and_kpis(activities):
     return df, kpis
 
 @st.cache_data(show_spinner="📥 Loading current year activities from Strava...")
-def load_current_year_data(token, start_date, activity_type="Run"):
+def load_current_year_data(token, start_date, end_date, activity_type="Run"):
     """
     Fetches and preprocesses activities from Strava and calculates KPIs.
 
@@ -84,10 +84,21 @@ def load_current_year_data(token, start_date, activity_type="Run"):
             - kpis (dict): Calculated KPIs for the activities.
     """
     start_ts = int(datetime.combine(start_date, datetime.min.time()).timestamp())
-    activities = get_strava_activities(token, after=start_ts, activity_types=[activity_type])
+    end_ts = int(datetime.combine(end_date, datetime.max.time()).timestamp())
+
+    activities = get_strava_activities(
+        token,
+        after=start_ts,
+        activity_types=[activity_type]
+    )
+
+    activities = [
+        act for act in activities
+        if pd.to_datetime(act["start_date"]).timestamp() <= end_ts
+    ]
     return get_df_and_kpis(activities)
 
-def get_last_year_range(start_date):
+def get_last_year_range(start_date, end_date):
     """
     Get the date range corresponding to the previous year for the selected period.
 
@@ -97,13 +108,13 @@ def get_last_year_range(start_date):
     Returns:
         tuple: A tuple containing the start and end dates for the previous year.
     """
-    period_days = (datetime.now().date() - start_date).days
+    period_days = (end_date - start_date).days
     start_last_year = start_date - timedelta(days=365)
     end_last_year = start_last_year + timedelta(days=period_days)
     return start_last_year, end_last_year
 
 @st.cache_data(show_spinner="📥 Loading last year activities from Strava...")
-def load_last_year_data(token, start_date, activity_type="Run"):
+def load_last_year_data(token, start_date, end_date, activity_type="Run"):
     """
     Fetches activities from the previous year within a date range for comparison.
 
@@ -117,7 +128,7 @@ def load_last_year_data(token, start_date, activity_type="Run"):
             - df_last_year (pd.DataFrame): Processed activities from last year in a DataFrame.
             - kpis_last_year (dict): Calculated KPIs for the activities from last year.
     """
-    start_last_year, end_last_year = get_last_year_range(start_date)
+    start_last_year, end_last_year = get_last_year_range(start_date, end_date)
     start_ts = int(datetime.combine(start_last_year, datetime.min.time()).timestamp())
     end_ts = int(datetime.combine(end_last_year, datetime.max.time()).timestamp())
 
@@ -156,7 +167,7 @@ def compute_all_comparisons(kpis_current, kpis_last_year):
 
     return comparisons
 
-def process_period(df, start_date, period_type="Week"):
+def process_period(df, start_date, end_date, period_type="Week"):
     """
     Aggregate and label activity data by week or month for visualization purposes.
 
@@ -183,12 +194,12 @@ def process_period(df, start_date, period_type="Week"):
 
     if period_type == "Week":
         df["period"] = df["start_date"].dt.to_period("W").apply(lambda r: r.start_time)
-        all_periods = pd.date_range(start=start_date, end=datetime.now(), freq="W-MON")
+        all_periods = pd.date_range(start=start_date, end=end_date, freq="W-MON")
         labels = [f"W{d.isocalendar().week} {d.year}" for d in all_periods]
 
     else:  # Month
         df["period"] = df["start_date"].dt.to_period("M").apply(lambda r: r.start_time)
-        all_periods = pd.date_range(start=start_date, end=datetime.now(), freq="MS")
+        all_periods = pd.date_range(start=start_date, end=end_date, freq="MS")
         labels = [d.strftime("%b %Y") for d in all_periods]
 
     all_periods_df = pd.DataFrame({

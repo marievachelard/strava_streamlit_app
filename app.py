@@ -76,18 +76,25 @@ try:
     with cols[0]:
         start_date = st.date_input("Start Date", default_start_date)
 
-        # Cache session: date filter
-        if "start_date_cache" not in st.session_state:
-            st.session_state.start_date_cache = start_date
+    with cols[1]:
+        end_date = st.date_input("End Date", datetime.now())
+    
+    if start_date > end_date:
+        st.error("❌ Start date must be before end date")
+        st.stop()
 
-        if start_date != st.session_state.start_date_cache:
-            st.session_state.start_date_cache = start_date
-            for key in ["df", "kpis", "df_last", "kpis_last"]:
-                st.session_state.pop(key, None)
+    # Cache session: date filter
+    if "date_range_cache" not in st.session_state:
+        st.session_state.date_range_cache = (start_date, end_date)
+
+    if (start_date, end_date) != st.session_state.date_range_cache:
+        st.session_state.date_range_cache = (start_date, end_date)
+        for key in ["df", "kpis", "df_last", "kpis_last"]:
+            st.session_state.pop(key, None)
     
     # Cache session: current year
     if "df" not in st.session_state or "kpis" not in st.session_state:
-        df, kpis = load_current_year_data(token, start_date)
+        df, kpis = load_current_year_data(token, start_date, end_date)
         st.session_state.df = df
         st.session_state.kpis = kpis
     else:
@@ -100,7 +107,7 @@ try:
     else:
         # Cache session: last year
         if "df_last" not in st.session_state or "kpis_last" not in st.session_state:
-            df_last_year, kpis_last_year = load_last_year_data(token, start_date)
+            df_last_year, kpis_last_year = load_last_year_data(token, start_date, end_date)
             st.session_state.df_last = df_last_year
             st.session_state.kpis_last = kpis_last_year
         else:
@@ -140,7 +147,7 @@ try:
 
         # Line chart with markers
         with st.container():
-            grouped_df, period_label = process_period(df, start_date, period_type=period)
+            grouped_df, period_label = process_period(df, start_date, end_date, period_type=period)
             average_distance = add_average_line(grouped_df)
 
             fig = display_distance_trend_chart(grouped_df, average_distance, period_type=period)
