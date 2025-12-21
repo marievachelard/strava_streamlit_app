@@ -98,7 +98,7 @@ def load_current_year_data(token, start_date, end_date, activity_type="Run"):
     ]
     return get_df_and_kpis(activities)
 
-def get_last_year_range(start_date):
+def get_last_year_range(start_date, end_date):
     """
     Get the date range corresponding to the previous year for the selected period.
 
@@ -108,13 +108,13 @@ def get_last_year_range(start_date):
     Returns:
         tuple: A tuple containing the start and end dates for the previous year.
     """
-    period_days = (datetime.now().date() - start_date).days
+    period_days = (end_date - start_date).days
     start_last_year = start_date - timedelta(days=365)
     end_last_year = start_last_year + timedelta(days=period_days)
     return start_last_year, end_last_year
 
 @st.cache_data(show_spinner="📥 Loading last year activities from Strava...")
-def load_last_year_data(token, start_date, activity_type="Run"):
+def load_last_year_data(token, start_date, end_date, activity_type="Run"):
     """
     Fetches activities from the previous year within a date range for comparison.
 
@@ -128,7 +128,7 @@ def load_last_year_data(token, start_date, activity_type="Run"):
             - df_last_year (pd.DataFrame): Processed activities from last year in a DataFrame.
             - kpis_last_year (dict): Calculated KPIs for the activities from last year.
     """
-    start_last_year, end_last_year = get_last_year_range(start_date)
+    start_last_year, end_last_year = get_last_year_range(start_date, end_date)
     start_ts = int(datetime.combine(start_last_year, datetime.min.time()).timestamp())
     end_ts = int(datetime.combine(end_last_year, datetime.max.time()).timestamp())
 

@@ -103,7 +103,7 @@ try:
     else:
         # Cache session: last year
         if "df_last" not in st.session_state or "kpis_last" not in st.session_state:
-            df_last_year, kpis_last_year = load_last_year_data(token, start_date)
+            df_last_year, kpis_last_year = load_last_year_data(token, start_date, end_date)
             st.session_state.df_last = df_last_year
             st.session_state.kpis_last = kpis_last_year
         else:
