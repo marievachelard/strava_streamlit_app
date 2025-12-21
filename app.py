@@ -161,10 +161,20 @@ try:
 
         # Line chart with markers
         with st.container():
-            grouped_df, period_label = process_period(df, start_date, end_date, period_type=period)
-            average_distance = add_average_line(grouped_df)
+            # Grouped data this year and year-1
+            grouped_df, _ = process_period(df, start_date, end_date, period_type=period)
+            grouped_last_df, _ = process_period(df_last_year, start_date, end_date, period_type=period, year_offset=-1)
 
-            fig = display_distance_trend_chart(grouped_df, average_distance, period_type=period)
+            # Average line
+            average_distance = grouped_df["distance_km"].mean()
+
+            # Line chart
+            fig = display_distance_trend_chart(
+                grouped_df,
+                average_distance,
+                period_type=period,
+                grouped_last_df=grouped_last_df
+            )
 
             st.plotly_chart(fig, use_container_width=True)
 
