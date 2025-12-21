@@ -79,14 +79,14 @@ try:
     with cols[1]:
         end_date = st.date_input("End Date", datetime.now())
 
-        # Cache session: date filter
-        if "start_date_cache" not in st.session_state:
-            st.session_state.start_date_cache = start_date
+    # Cache session: date filter
+    if "date_range_cache" not in st.session_state:
+        st.session_state.date_range_cache = (start_date, end_date)
 
-        if start_date != st.session_state.start_date_cache:
-            st.session_state.start_date_cache = start_date
-            for key in ["df", "kpis", "df_last", "kpis_last"]:
-                st.session_state.pop(key, None)
+    if (start_date, end_date) != st.session_state.date_range_cache:
+        st.session_state.date_range_cache = (start_date, end_date)
+        for key in ["df", "kpis", "df_last", "kpis_last"]:
+            st.session_state.pop(key, None)
     
     # Cache session: current year
     if "df" not in st.session_state or "kpis" not in st.session_state:
