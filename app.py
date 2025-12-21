@@ -75,23 +75,21 @@ try:
     # Initialize session state for Apply button
     if "dates_applied" not in st.session_state:
         st.session_state.dates_applied = False
-    
+
     cols = st.columns(4)
     with cols[0]:
         start_date = st.date_input("Start Date", default_start_date)
-
     with cols[1]:
         end_date = st.date_input("End Date", datetime.now())
-
     with cols[2]:
         apply_dates = st.button("Apply", type="primary")
-    
+
     if apply_dates:
         # Validate the date range
         if start_date > end_date:
             st.error("❌ Start date must be before end date")
             st.stop()
-        
+
         # Save confirmed date range
         st.session_state.date_range_cache = (start_date, end_date)
         st.session_state.dates_applied = True
@@ -117,7 +115,6 @@ try:
     else:
         df = st.session_state.df
         kpis = st.session_state.kpis
-
 
     if df.empty:
         st.warning("No activities found for this period.")
