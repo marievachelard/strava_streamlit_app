@@ -192,5 +192,14 @@ except Exception as e:
     # In case of rate limit
     if "429" in str(e):
         st.error("🚦 Strava API rate limit reached. Please wait a few minutes and try again.")
+    # In case Strava API access is no longer allowed (subscribers only)
+    elif "403" in str(e):
+        st.warning(
+            "🏃💨 **Plot twist: Strava has left me on read.**\n\n"
+            "Strava now reserves its API for paying subscribers, and this app "
+            "runs on a free account. So no more data for now, and my charts "
+            "are out of breath before even starting the first km.\n\n"
+            "🙏 Thanks for your visit, and see you at the next finish line!"
+        )
     else:
         st.error(f"❌ Error: {e}")
