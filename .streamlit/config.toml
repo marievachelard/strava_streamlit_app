@@ -1,3 +1,7 @@
+[server]
+# Avoid "inotify instance limit reached" crash on Streamlit Cloud shared hosts
+fileWatcherType = "none"
+
 [theme]
 primaryColor="#FC4C02"
 backgroundColor="#101011"
